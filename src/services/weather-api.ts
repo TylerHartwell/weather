@@ -1,3 +1,4 @@
+// import { fetchWeatherApi } from 'openmeteo';
 import type { WeatherData } from "@/types/weather"
 import { getDateString, getDayName } from "@/lib/weather-utils"
 
@@ -35,6 +36,22 @@ export async function fetchWeatherData(location: string): Promise<WeatherData> {
     const locationData = await getCoordinates(location)
     const { latitude, longitude, name, country, timezone } = locationData
 
+    //     const params = {
+    //       "latitude": 52.52,
+    //       "longitude": 13.41,
+    //       "daily": ["weather_code", "temperature_2m_max", "wind_speed_10m_max", "wind_direction_10m_dominant", "sunrise", "sunset", "uv_index_max", "precipitation_probability_max", "precipitation_sum", "temperature_2m_min"],
+    //       "hourly": ["temperature_2m", "wind_speed_10m", "precipitation_probability"],
+    //       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
+    //       "timezone": "America/Los_Angeles",
+    //       "past_days": 7,
+    //       "wind_speed_unit": "mph",
+    //       "temperature_unit": "fahrenheit",
+    //       "precipitation_unit": "inch"
+    //     };
+
+    //     const url = "https://api.open-meteo.com/v1/forecast";
+    // const responses = await fetchWeatherApi(url, params);
+
     // Step 2: Fetch current weather and forecast data
     const weatherResponse = await fetch(
       `https://api.open-meteo.com/v1/forecast?` +
@@ -42,7 +59,8 @@ export async function fetchWeatherData(location: string): Promise<WeatherData> {
         `&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m` +
         `&hourly=temperature_2m,precipitation_probability,weather_code,wind_speed_10m` +
         `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
-        `&timezone=${timezone}&forecast_days=7`
+        `&timezone=${timezone}` +
+        `&forecast_days=7`
     )
 
     if (!weatherResponse.ok) {
@@ -50,6 +68,7 @@ export async function fetchWeatherData(location: string): Promise<WeatherData> {
     }
 
     const weatherData = await weatherResponse.json()
+    console.log("weather data: ", weatherData)
 
     // Step 3: Fetch historical data (last 7 days)
     const today = new Date()
@@ -72,9 +91,12 @@ export async function fetchWeatherData(location: string): Promise<WeatherData> {
     }
 
     const historicalData = await historicalResponse.json()
+    console.log("historical data: ", historicalData)
 
     // Transform the data to match our app's format
-    return transformWeatherData(weatherData, historicalData, `${name}, ${country}`)
+    const transformedWeatherData = transformWeatherData(weatherData, historicalData, `${name}, ${country}`)
+    console.log("transformed: ", transformedWeatherData)
+    return transformedWeatherData
   } catch (error) {
     console.error("Error fetching weather data:", error)
     throw error
