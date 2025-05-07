@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { useWeatherData } from "@/hooks/use-weather-data"
-import type { VisibleTimeRange } from "@/types/weather"
+// import type { VisibleTimeRange } from "@/types/weather"
 
 import CurrentWeather from "@/components/weather/current-weather"
-import WeatherDetails from "@/components/weather/weather-details"
-import ChartSection from "@/components/weather/chart-section"
-import TimelineSection from "@/components/weather/timeline-section"
+// import WeatherDetails from "@/components/weather/weather-details"
+// import ChartSection from "@/components/weather/chart-section"
+// import TimelineSection from "@/components/weather/timeline-section"
 import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
@@ -19,8 +19,8 @@ import ErrorState from "@/components/weather/error-state"
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
   const { weatherData, isLoading, error, fetchWeatherData } = useWeatherData(location)
-  const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
-  const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
+  // const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
+  // const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
 
   const handleSearch = useCallback(
     (query: string) => {
@@ -30,19 +30,19 @@ export default function WeatherDashboard() {
     [fetchWeatherData]
   )
 
-  const handleVisibleRangeChange = useCallback((start: number, end: number) => {
-    setVisibleTimeRange(prev => {
-      // Only update if the range has actually changed
-      if (!prev || Math.abs(prev.start - start) > 100 || Math.abs(prev.end - end) > 100) {
-        return { start, end }
-      }
-      return prev
-    })
-  }, [])
+  // const handleVisibleRangeChange = useCallback((start: number, end: number) => {
+  //   setVisibleTimeRange(prev => {
+  //     // Only update if the range has actually changed
+  //     if (!prev || Math.abs(prev.start - start) > 100 || Math.abs(prev.end - end) > 100) {
+  //       return { start, end }
+  //     }
+  //     return prev
+  //   })
+  // }, [])
 
-  const handleDayClick = useCallback((timestamp: number) => {
-    setSelectedTimestamp(timestamp)
-  }, [])
+  // const handleDayClick = useCallback((timestamp: number) => {
+  //   setSelectedTimestamp(timestamp)
+  // }, [])
 
   const handleRetry = useCallback(() => {
     fetchWeatherData(location)
@@ -66,7 +66,7 @@ export default function WeatherDashboard() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center">
             <span className="text-sm text-gray-400">Results for</span>
-            <CardTitle className="ml-2 text-base font-medium">{weatherData.location}</CardTitle>
+            {/* <CardTitle className="ml-2 text-base font-medium">{weatherData.location}</CardTitle> */}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 p-0">
@@ -83,24 +83,24 @@ export default function WeatherDashboard() {
             <CurrentWeather data={weatherData.current} />
 
             {/* Weather Details */}
-            <WeatherDetails data={weatherData.current} />
+            {/* <WeatherDetails data={weatherData.current} /> */}
 
             {/* Chart Section */}
-            <ChartSection
+            {/* <ChartSection
               data={weatherData.hourlyDetailed}
               onVisibleRangeChange={handleVisibleRangeChange}
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
-            />
+            /> */}
 
             {/* Timeline Section */}
-            <TimelineSection
-              historicalData={weatherData.historical}
+            {/* <TimelineSection
+              // historicalData={weatherData.historical}
               forecastData={weatherData.forecast}
               visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}
-            />
+            /> */}
 
             {/* Search */}
             <SearchBar onSearch={handleSearch} initialQuery={location} />

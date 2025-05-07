@@ -1,40 +1,34 @@
 // Types for weather data
-export interface WeatherDay {
-  day: string
-  date?: string
-  icon: string
-  highTemp: number
-  lowTemp: number
-  timestamp?: number // Start timestamp of the day
-}
-
-export interface ChartData {
-  time: string
-  timestamp: number // Unix timestamp for ordering
-  temp: number
-  precipitation?: number
-  wind?: number
-  isCurrent?: boolean
-  date?: string // Date in YYYY-MM-DD format for grouping by day
-}
-
-export interface CurrentWeather {
-  temp: number
-  tempUnit: string
-  condition: string
-  precipitation: string
-  humidity: string
-  wind: string
-  icon: string
-  day: string
-}
 
 export interface WeatherData {
-  location: string
-  current: CurrentWeather
-  hourlyDetailed: ChartData[]
-  forecast: WeatherDay[]
-  historical: WeatherDay[]
+  current: {
+    time: Date
+    temperature2m: number
+    relativeHumidity2m: number
+    windSpeed10m: number
+    windDirection10m: number
+    precipitation: number
+    weatherCode: number
+  }
+  hourly: {
+    time: Date[]
+    temperature2m: Float32Array
+    windSpeed10m: Float32Array
+    precipitationProbability: Float32Array
+  }
+  daily: {
+    time: Date[]
+    weatherCode: Float32Array
+    temperature2mMax: Float32Array
+    windSpeed10mMax: Float32Array
+    windDirection10mDominant: Float32Array
+    sunrise: Date[]
+    sunset: Date[]
+    uvIndexMax: Float32Array
+    precipitationProbabilityMax: Float32Array
+    precipitationSum: Float32Array
+    temperature2mMin: Float32Array
+  }
 }
 
 export interface VisibleSeries {

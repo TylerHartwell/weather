@@ -7,7 +7,7 @@ import type { WeatherDay, VisibleTimeRange } from "@/types/weather"
 import WeatherIcon from "./weather-icon"
 
 interface CombinedWeatherTimelineProps {
-  historicalData: WeatherDay[]
+  // historicalData: WeatherDay[]
   forecastData: WeatherDay[]
   visibleTimeRange?: VisibleTimeRange | null
   onDayClick?: (timestamp: number) => void
@@ -15,7 +15,7 @@ interface CombinedWeatherTimelineProps {
 }
 
 export default function CombinedWeatherTimeline({
-  historicalData,
+  // historicalData,
   forecastData,
   visibleTimeRange,
   onDayClick,
@@ -32,11 +32,11 @@ export default function CombinedWeatherTimeline({
     const todayTimestamp = today.setHours(0, 0, 0, 0)
     const todayDateStr = today.toLocaleDateString("en-US", { month: "short", day: "numeric" })
 
-    const enhancedHistorical = historicalData.map((day, index) => {
-      // Calculate approximate timestamp for historical days (going backwards from today)
-      const dayTimestamp = todayTimestamp - (historicalData.length - index) * 24 * 60 * 60 * 1000
-      return { ...day, timestamp: dayTimestamp }
-    })
+    // const enhancedHistorical = historicalData.map((day, index) => {
+    //   // Calculate approximate timestamp for historical days (going backwards from today)
+    //   const dayTimestamp = todayTimestamp - (historicalData.length - index) * 24 * 60 * 60 * 1000
+    //   return { ...day, timestamp: dayTimestamp }
+    // })
 
     const todayData = {
       day: "Today",
@@ -55,8 +55,8 @@ export default function CombinedWeatherTimeline({
       return { ...day, date: dateStr, timestamp: dayTimestamp }
     })
 
-    setAllDays([...enhancedHistorical, todayData, ...enhancedForecast])
-  }, [historicalData, forecastData])
+    setAllDays([todayData, ...enhancedForecast])
+  }, [forecastData])
 
   // Calculate bracket position based on visible time range
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function CombinedWeatherTimeline({
     lastVisibleRangeRef.current = visibleTimeRange
 
     // Find the day that has the most hours in the visible range
-    let maxOverlapDay = null
+    // let maxOverlapDay = null
     let maxOverlapHours = 0
     let maxOverlapDayId = null
 
@@ -150,7 +150,7 @@ export default function CombinedWeatherTimeline({
       // Use strictly greater than to ensure only one day gets selected
       if (overlapHours > maxOverlapHours) {
         maxOverlapHours = overlapHours
-        maxOverlapDay = day.day
+        // maxOverlapDay = day.day
         maxOverlapDayId = dayId
       }
     })
@@ -206,7 +206,8 @@ export default function CombinedWeatherTimeline({
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-gray-700 text-xs mb-1">
-                  {index < historicalData.length ? "Past" : "Future"}
+                  {/* {index < historicalData.length ? "Past" : "Future"} */}
+                  {""}
                 </Badge>
               )}
               <div className="my-2">
