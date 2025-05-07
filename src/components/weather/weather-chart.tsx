@@ -1,0 +1,527 @@
+"use client"
+
+import type React from "react"
+
+import { useEffect, useRef, useState, useCallback } from "react"
+import type { ChartData, VisibleSeries } from "@/types/weather"
+
+interface WeatherChartProps {
+  data: ChartData[]
+  onVisibleRangeChange?: (start: number, end: number) => void
+  scrollToTimestamp?: number | null
+  centerOnCurrent?: boolean
+  containerRef?: React.RefObject<HTMLDivElement> | ((node: HTMLDivElement) => void)
+  visibleSeries?: VisibleSeries
+}
+
+export default function WeatherChart({
+  data,
+  onVisibleRangeChange,
+  scrollToTimestamp,
+  centerOnCurrent = false,
+  visibleSeries = { temperature: true, precipitation: true, wind: true },
+  ...props
+}: WeatherChartProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scrollPosition, setScrollPosition] = useState(0)
+  const [visibleTimeRange, setVisibleTimeRange] = useState<{ start: number; end: number } | null>(null)
+  const [initialScrollDone, setInitialScrollDone] = useState(false)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const scrollEndTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastScrollUpdateRef = useRef<number>(0)
+  const requestAnimationFrameRef = useRef<number | null>(null)
+  const isAutoScrollingRef = useRef<boolean>(false)
+  const lastScrollToTimestampRef = useRef<number | null>(null)
+
+  // Forward ref to parent component
+  useEffect(() => {
+    if (containerRef.current && typeof props.containerRef === "function") {
+      props.containerRef(containerRef.current)
+    } else if (props.containerRef && "current" in props.containerRef) {
+      props.containerRef.current = containerRef.current
+    }
+  }, [props.containerRef])
+
+  // Sort data by timestamp to ensure chronological order
+  const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp)
+
+  // Find the current time index
+  const currentIndex = sortedData.findIndex(item => item.isCurrent)
+
+  // Memoize the calculateTimePerPixel function
+  const calculateTimePerPixel = useCallback(() => {
+    if (sortedData.length <= 1 || !canvasRef.current) return 0
+
+    const totalTimespan = sortedData[sortedData.length - 1].timestamp - sortedData[0].timestamp
+    const chartWidth = canvasRef.current.width - 80 // 80 is padding * 2
+
+    return totalTimespan / chartWidth
+  }, [sortedData])
+
+  // Memoize the calculateVisibleTimeRange function to prevent recreation on each render
+  const calculateVisibleTimeRange = useCallback(() => {
+    if (!containerRef.current || !canvasRef.current || sortedData.length === 0) return null
+
+    const containerWidth = containerRef.current.clientWidth
+    const scrollLeft = containerRef.current.scrollLeft
+    const timePerPixel = calculateTimePerPixel()
+
+    if (timePerPixel === 0) return null
+
+    // Calculate the exact start and end times based on scroll position
+    const startTime = sortedData[0].timestamp + scrollLeft * timePerPixel
+    const endTime = startTime + containerWidth * timePerPixel
+
+    // Round to the nearest minute to avoid floating point issues
+    const roundToMinute = (timestamp: number) => {
+      const date = new Date(timestamp)
+      const minutes = Math.round(date.getMinutes() / 1) * 1
+      date.setMinutes(minutes, 0, 0)
+      return date.getTime()
+    }
+
+    return {
+      start: roundToMinute(startTime),
+      end: roundToMinute(endTime)
+    }
+  }, [sortedData, calculateTimePerPixel])
+
+  // Draw the chart
+  const drawChart = useCallback(() => {
+    if (!canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d", { alpha: false }) // Use non-alpha for better performance
+    if (!ctx) return
+
+    // Set dimensions - make it wider for scrolling
+    // Each hour gets more space since we're only viewing 24 hours at a time
+    const width = Math.max(2000, sortedData.length * 30) // Each data point gets 30px width
+    const height = canvas.height
+    canvas.width = width
+
+    const padding = 40
+    const chartWidth = width - padding * 2
+    const chartHeight = height - padding * 2
+
+    // Clear canvas - use fillRect instead of clearRect for better performance
+    ctx.fillStyle = "#1F2937" // Dark gray background
+    ctx.fillRect(0, 0, width, height)
+
+    // Draw grid lines
+    ctx.strokeStyle = "#374151" // Lighter gray for grid
+    ctx.lineWidth = 1
+
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (i / 4) * chartHeight
+      ctx.beginPath()
+      ctx.moveTo(padding, y)
+      ctx.lineTo(width - padding, y)
+      ctx.stroke()
+    }
+
+    // Find all midnight timestamps (day boundaries)
+    const dayBoundaries = new Map<number, { prevDate: string; nextDate: string }>()
+
+    if (sortedData.length > 0) {
+      // Get the start and end timestamps
+      const startTime = sortedData[0].timestamp
+      const endTime = sortedData[sortedData.length - 1].timestamp
+
+      // Find the first midnight after the start time
+      const firstDate = new Date(startTime)
+      firstDate.setHours(0, 0, 0, 0)
+      if (firstDate.getTime() < startTime) {
+        // If start time is after midnight, move to next day
+        firstDate.setDate(firstDate.getDate() + 1)
+      }
+
+      // Generate all midnight timestamps between start and end
+      let currentMidnight = firstDate.getTime()
+      while (currentMidnight <= endTime) {
+        const midnightDate = new Date(currentMidnight)
+
+        // Get the date strings for the day before and after midnight
+        const prevDay = new Date(currentMidnight)
+        prevDay.setDate(prevDay.getDate() - 1)
+        const prevDateStr = prevDay.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+        const nextDateStr = midnightDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+        // Store the boundary with its date labels
+        dayBoundaries.set(currentMidnight, {
+          prevDate: prevDateStr,
+          nextDate: nextDateStr
+        })
+
+        // Move to next midnight
+        midnightDate.setDate(midnightDate.getDate() + 1)
+        currentMidnight = midnightDate.getTime()
+      }
+    }
+
+    // Draw vertical lines at midnight (day boundaries)
+    dayBoundaries.forEach((dateLabels, timestamp) => {
+      // Calculate x position for this timestamp
+      const timeOffset = timestamp - sortedData[0].timestamp
+      const timePerPixel = calculateTimePerPixel()
+      const x = padding + timeOffset / timePerPixel
+
+      // Draw dashed vertical line at midnight
+      ctx.beginPath()
+      ctx.strokeStyle = "#6B7280"
+      ctx.lineWidth = 1
+      ctx.setLineDash([5, 3])
+      ctx.moveTo(x, padding)
+      ctx.lineTo(x, height - padding)
+      ctx.stroke()
+      ctx.setLineDash([])
+
+      // Draw date labels on both sides of the boundary
+      ctx.fillStyle = "#9CA3AF"
+      ctx.font = "10px Arial"
+
+      // Draw previous date label (left side)
+      ctx.textAlign = "right"
+      ctx.fillText(dateLabels.prevDate, x - 5, padding - 25)
+
+      // Draw next date label (right side)
+      ctx.textAlign = "left"
+      ctx.fillText(dateLabels.nextDate, x + 5, padding - 25)
+    })
+
+    // Find min and max values for temperature
+    const tempValues = sortedData.map(item => item.temp)
+    const minTemp = Math.min(...tempValues) - 2
+    const maxTemp = Math.max(...tempValues) + 2
+    const tempRange = maxTemp - minTemp
+
+    // Find max values for precipitation and wind (min is always 0)
+    const maxPrecip = Math.max(...sortedData.map(item => item.precipitation || 0)) + 5
+    const maxWind = Math.max(...sortedData.map(item => item.wind || 0)) + 5
+
+    // Draw temperature line if visible
+    if (visibleSeries.temperature) {
+      ctx.beginPath()
+      ctx.strokeStyle = "#FACC15" // Yellow for temperature
+      ctx.lineWidth = 3
+
+      sortedData.forEach((point, index) => {
+        const x = padding + (index / (sortedData.length - 1)) * chartWidth
+        const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight
+
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      ctx.stroke()
+
+      // Draw temperature points - but only every few points to avoid clutter
+      sortedData.forEach((point, index) => {
+        // Only draw points every 6 hours to avoid clutter
+        if (index % 6 === 0) {
+          const x = padding + (index / (sortedData.length - 1)) * chartWidth
+          const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight
+
+          ctx.beginPath()
+          ctx.arc(x, y, 4, 0, Math.PI * 2)
+          ctx.fillStyle = "#FACC15" // Yellow for temperature
+          ctx.fill()
+        }
+      })
+
+      // Draw temperature values - but only every few points to avoid clutter
+      ctx.fillStyle = "#FACC15" // Yellow for temperature
+      sortedData.forEach((point, index) => {
+        // Only draw temperature values every 6 hours to avoid clutter
+        if (index % 6 === 0) {
+          const x = padding + (index / (sortedData.length - 1)) * chartWidth
+          const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight - 15
+          ctx.fillText(`${point.temp}°`, x, y)
+        }
+      })
+    }
+
+    // Draw precipitation line if visible
+    if (visibleSeries.precipitation) {
+      ctx.beginPath()
+      ctx.strokeStyle = "#60A5FA" // Blue for precipitation
+      ctx.lineWidth = 2
+
+      sortedData.forEach((point, index) => {
+        const x = padding + (index / (sortedData.length - 1)) * chartWidth
+        const y = height - padding - ((point.precipitation || 0) / maxPrecip) * chartHeight
+
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      ctx.stroke()
+    }
+
+    // Draw wind line if visible
+    if (visibleSeries.wind) {
+      ctx.beginPath()
+      ctx.strokeStyle = "#4ADE80" // Green for wind
+      ctx.lineWidth = 2
+
+      sortedData.forEach((point, index) => {
+        const x = padding + (index / (sortedData.length - 1)) * chartWidth
+        const y = height - padding - ((point.wind || 0) / maxWind) * chartHeight
+
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      ctx.stroke()
+    }
+
+    // Draw time labels - but only every few hours to avoid clutter
+    ctx.fillStyle = "#FFFFFF"
+    ctx.font = "12px Arial"
+    ctx.textAlign = "center"
+
+    // Draw time labels every 3 hours for better readability in 24-hour view
+    sortedData.forEach((point, index) => {
+      if (index % 3 === 0) {
+        const x = padding + (index / (sortedData.length - 1)) * chartWidth
+        const y = height - 10
+        ctx.fillText(point.time, x, y)
+      }
+    })
+
+    // Draw vertical line for current time
+    if (currentIndex >= 0) {
+      const currentX = padding + (currentIndex / (sortedData.length - 1)) * chartWidth
+
+      // Draw dashed line
+      ctx.beginPath()
+      ctx.strokeStyle = "#FFFFFF"
+      ctx.lineWidth = 2
+      ctx.setLineDash([5, 3])
+      ctx.moveTo(currentX, padding)
+      ctx.lineTo(currentX, height - padding)
+      ctx.stroke()
+
+      // Reset line dash
+      ctx.setLineDash([])
+
+      // Draw "NOW" label
+      ctx.fillStyle = "#FFFFFF"
+      ctx.font = "bold 12px Arial"
+      ctx.textAlign = "center"
+      ctx.fillText("NOW", currentX, padding - 10)
+
+      // Draw circle at the top of the line
+      ctx.beginPath()
+      ctx.arc(currentX, padding, 5, 0, Math.PI * 2)
+      ctx.fillStyle = "#FFFFFF"
+      ctx.fill()
+    }
+  }, [sortedData, currentIndex, calculateTimePerPixel, visibleSeries])
+
+  // Initial chart drawing
+  useEffect(() => {
+    drawChart()
+  }, [drawChart])
+
+  // Handle scrolling and update visible range with throttling
+  useEffect(() => {
+    const handleScrollEvent = () => {
+      if (!containerRef.current) return
+
+      // If this is an auto-scroll, don't process it as a manual scroll
+      if (isAutoScrollingRef.current) return
+
+      // Set scrolling state
+      setIsScrolling(true)
+
+      // Clear any existing scroll end timer
+      if (scrollEndTimerRef.current) {
+        clearTimeout(scrollEndTimerRef.current)
+      }
+
+      // Set a timer to detect when scrolling stops
+      scrollEndTimerRef.current = setTimeout(() => {
+        setIsScrolling(false)
+
+        // Update the visible range when scrolling stops
+        const range = calculateVisibleTimeRange()
+        if (range && onVisibleRangeChange) {
+          setVisibleTimeRange(range)
+          onVisibleRangeChange(range.start, range.end)
+        }
+      }, 150)
+
+      // Throttle scroll position updates to improve performance
+      const now = Date.now()
+      if (now - lastScrollUpdateRef.current > 16) {
+        // ~60fps
+        lastScrollUpdateRef.current = now
+        setScrollPosition(containerRef.current.scrollLeft)
+
+        // Update visible range during scrolling for more responsive UI
+        if (now - lastScrollUpdateRef.current > 100) {
+          // Only update every 100ms during active scrolling
+          const range = calculateVisibleTimeRange()
+          if (range && onVisibleRangeChange) {
+            setVisibleTimeRange(range)
+            onVisibleRangeChange(range.start, range.end)
+          }
+        }
+      }
+    }
+
+    const container = containerRef.current
+    if (container) {
+      // Use passive event listener for better performance
+      container.addEventListener("scroll", handleScrollEvent, { passive: true })
+
+      // Initial calculation - but only if we don't already have a range
+      if (!visibleTimeRange) {
+        const range = calculateVisibleTimeRange()
+        if (range && onVisibleRangeChange) {
+          setVisibleTimeRange(range)
+          onVisibleRangeChange(range.start, range.end)
+        }
+      }
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleScrollEvent)
+      }
+      if (scrollEndTimerRef.current) {
+        clearTimeout(scrollEndTimerRef.current)
+      }
+      if (requestAnimationFrameRef.current) {
+        cancelAnimationFrame(requestAnimationFrameRef.current)
+      }
+    }
+  }, [calculateVisibleTimeRange, onVisibleRangeChange, visibleTimeRange])
+
+  // Handle scrolling to a specific timestamp with smooth animation
+  useEffect(() => {
+    if (
+      scrollToTimestamp &&
+      containerRef.current &&
+      canvasRef.current &&
+      sortedData.length > 0 &&
+      scrollToTimestamp !== lastScrollToTimestampRef.current
+    ) {
+      // Update the last scrolled timestamp
+      lastScrollToTimestampRef.current = scrollToTimestamp
+
+      // Find the exact day start for the selected timestamp
+      const selectedDate = new Date(scrollToTimestamp)
+      selectedDate.setHours(0, 0, 0, 0)
+      const dayStart = selectedDate.getTime()
+
+      // Calculate the middle of the day (noon) for better centering
+      const dayMiddle = dayStart + 12 * 60 * 60 * 1000
+
+      const timePerPixel = calculateTimePerPixel()
+      if (timePerPixel === 0) return
+
+      const startTimestamp = sortedData[0].timestamp
+      const pixelOffset = (dayMiddle - startTimestamp) / timePerPixel
+
+      // Center the view on the selected day
+      const containerWidth = containerRef.current.clientWidth
+      const targetScrollPosition = Math.max(0, pixelOffset - containerWidth / 2)
+
+      // Set flag to indicate we're auto-scrolling
+      isAutoScrollingRef.current = true
+
+      // Use smooth scrolling
+      containerRef.current.scrollTo({
+        left: targetScrollPosition,
+        behavior: "smooth"
+      })
+
+      // Update visible range after scrolling
+      setTimeout(() => {
+        isAutoScrollingRef.current = false
+        const range = calculateVisibleTimeRange()
+        if (range && onVisibleRangeChange) {
+          setVisibleTimeRange(range)
+          onVisibleRangeChange(range.start, range.end)
+        }
+      }, 500) // Wait for smooth scroll to complete
+    }
+  }, [scrollToTimestamp, sortedData, calculateTimePerPixel, calculateVisibleTimeRange, onVisibleRangeChange])
+
+  // Auto-scroll to current time on initial render
+  useEffect(() => {
+    if (containerRef.current && currentIndex >= 0 && canvasRef.current && !initialScrollDone && centerOnCurrent) {
+      const padding = 40
+      const chartWidth = canvasRef.current.width - padding * 2
+      const currentX = padding + (currentIndex / (sortedData.length - 1)) * chartWidth
+
+      // Center the current time in the viewport
+      const containerWidth = containerRef.current.clientWidth
+      const scrollTo = Math.max(0, currentX - containerWidth / 2)
+
+      // Set flag to indicate we're auto-scrolling
+      isAutoScrollingRef.current = true
+
+      containerRef.current.scrollLeft = scrollTo
+      setScrollPosition(scrollTo)
+      setInitialScrollDone(true)
+
+      // Calculate and set the visible time range for 24 hours
+      const timePerPixel = calculateTimePerPixel()
+      if (timePerPixel > 0) {
+        const visibleStartTime = sortedData[0].timestamp + scrollTo * timePerPixel
+        const visibleEndTime = visibleStartTime + containerWidth * timePerPixel
+
+        if (onVisibleRangeChange) {
+          onVisibleRangeChange(visibleStartTime, visibleEndTime)
+        }
+      }
+
+      // Reset auto-scrolling flag after a short delay
+      setTimeout(() => {
+        isAutoScrollingRef.current = false
+      }, 100)
+    }
+  }, [currentIndex, sortedData, initialScrollDone, centerOnCurrent, calculateTimePerPixel, onVisibleRangeChange])
+
+  return (
+    <div className="relative">
+      <div
+        ref={containerRef}
+        className="w-full h-64 bg-gray-800 rounded-md overflow-x-auto hide-scrollbar"
+        style={{
+          WebkitOverflowScrolling: "touch" // Smooth scrolling on iOS
+        }}
+      >
+        <canvas ref={canvasRef} height={250} className="h-full" />
+      </div>
+      <style jsx>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          height: 6px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-track {
+          background: #374151;
+          border-radius: 3px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+          background: #4b5563;
+          border-radius: 3px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #6b7280;
+        }
+      `}</style>
+    </div>
+  )
+}
