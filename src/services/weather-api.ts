@@ -1,5 +1,5 @@
 import { fetchWeatherApi } from "openmeteo"
-import type { WeatherData } from "@/types/weather"
+import type { PrecipitationUnit, TemperatureUnit, WeatherData, WindSpeedUnit } from "@/types/weather"
 
 // Geocoding API to convert location name to coordinates
 async function getCoordinates(location: string) {
@@ -29,10 +29,15 @@ async function getCoordinates(location: string) {
   }
 }
 
-export async function fetchWeatherData(location: string): Promise<WeatherData> {
+export async function fetchWeatherData(
+  location: string,
+  windSpeedUnit: WindSpeedUnit,
+  temperatureUnit: TemperatureUnit,
+  precipitationUnit: PrecipitationUnit
+): Promise<WeatherData> {
   try {
-    // Step 1: Convert location name to coordinates
     const locationData = await getCoordinates(location)
+
     const { latitude, longitude, timezone } = locationData
 
     const params = {
@@ -54,23 +59,17 @@ export async function fetchWeatherData(location: string): Promise<WeatherData> {
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "timezone": timezone,
       "past_days": 7,
-      "wind_speed_unit": "mph",
-      "temperature_unit": "fahrenheit",
-      "precipitation_unit": "inch"
+      "wind_speed_unit": windSpeedUnit,
+      "temperature_unit": temperatureUnit,
+      "precipitation_unit": precipitationUnit
     }
-
     const url = "https://api.open-meteo.com/v1/forecast"
+
     const responses = await fetchWeatherApi(url, params)
 
-    // Step 2: Fetch current weather and forecast data
     const response = responses[0]
 
     const resUtcOffsetSeconds = response.utcOffsetSeconds()
-    // const resTimezone = response.timezone();
-    // const resTimezoneAbbreviation = response.timezoneAbbreviation();
-    // const resLatitude = response.latitude();
-    // const resLongitude = response.longitude();
-
     const current = response.current()!
     const hourly = response.hourly()!
     const daily = response.daily()!

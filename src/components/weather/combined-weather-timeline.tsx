@@ -3,12 +3,11 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect, useRef } from "react"
-import type { WeatherDay, VisibleTimeRange } from "@/types/weather"
+import type { WeatherData, VisibleTimeRange } from "@/types/weather"
 import WeatherIcon from "./weather-icon"
 
 interface CombinedWeatherTimelineProps {
-  // historicalData: WeatherDay[]
-  forecastData: WeatherDay[]
+  forecastData: WeatherData
   visibleTimeRange?: VisibleTimeRange | null
   onDayClick?: (timestamp: number) => void
   selectedTimestamp?: number | null
@@ -21,7 +20,7 @@ export default function CombinedWeatherTimeline({
   onDayClick,
   selectedTimestamp
 }: CombinedWeatherTimelineProps) {
-  const [allDays, setAllDays] = useState<WeatherDay[]>([])
+  const [allDays, setAllDays] = useState<WeatherData | null>(null)
   const [bracketPosition, setBracketPosition] = useState<{ left: number; width: number } | null>(null)
   const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null)
   const lastVisibleRangeRef = useRef<VisibleTimeRange | null>(null)

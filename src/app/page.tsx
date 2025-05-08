@@ -3,8 +3,8 @@
 import { useCallback, useState } from "react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+// import { Button } from "@/components/ui/button"
+// import { MoreHorizontal } from "lucide-react"
 import { useWeatherData } from "@/hooks/use-weather-data"
 // import type { VisibleTimeRange } from "@/types/weather"
 
@@ -15,20 +15,16 @@ import CurrentWeather from "@/components/weather/current-weather"
 import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
+import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
-  const { weatherData, isLoading, error, fetchWeatherData } = useWeatherData(location)
+  const [windSpeedUnit, setWindSpeedUnit] = useState<WindSpeedUnit>("mph")
+  const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
+  const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
+  const { weatherData, isLoading, error, fetchWeatherData } = useWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
   // const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
   // const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
-
-  const handleSearch = useCallback(
-    (query: string) => {
-      setLocation(query)
-      fetchWeatherData(query)
-    },
-    [fetchWeatherData]
-  )
 
   // const handleVisibleRangeChange = useCallback((start: number, end: number) => {
   //   setVisibleTimeRange(prev => {
@@ -44,9 +40,27 @@ export default function WeatherDashboard() {
   //   setSelectedTimestamp(timestamp)
   // }, [])
 
+  const toggleWindUnit = () => {
+    setWindSpeedUnit(prev => (prev === "mph" ? "kmh" : "mph"))
+  }
+  const toggleTempUnit = () => {
+    setTemperatureUnit(prev => (prev === "fahrenheit" ? "celsius" : "fahrenheit"))
+  }
+  const togglePrecipitationUnit = () => {
+    setPrecipitationUnit(prev => (prev === "inch" ? "mm" : "inch"))
+  }
+
   const handleRetry = useCallback(() => {
-    fetchWeatherData(location)
-  }, [fetchWeatherData, location])
+    fetchWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
+  }, [fetchWeatherData, location, precipitationUnit, temperatureUnit, windSpeedUnit])
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      setLocation(query)
+      handleRetry()
+    },
+    [handleRetry]
+  )
 
   if (isLoading) {
     return <LoadingState />
@@ -66,21 +80,21 @@ export default function WeatherDashboard() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center">
             <span className="text-sm text-gray-400">Results for</span>
-            {/* <CardTitle className="ml-2 text-base font-medium">{weatherData.location}</CardTitle> */}
+            <CardTitle className="ml-2 text-base font-medium">{location}</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 p-0">
+            {/* <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 p-0">
               Choose area
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400">
               <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-6">
             {/* Current Weather */}
-            <CurrentWeather data={weatherData.current} />
+            <CurrentWeather data={weatherData.current} toggleTempUnit={toggleTempUnit} temperatureUnit={temperatureUnit} />
 
             {/* Weather Details */}
             {/* <WeatherDetails data={weatherData.current} /> */}
@@ -104,8 +118,6 @@ export default function WeatherDashboard() {
 
             {/* Search */}
             <SearchBar onSearch={handleSearch} initialQuery={location} />
-
-            <div className="text-xs text-gray-400 text-right">Google Weather • Feedback</div>
           </div>
         </CardContent>
       </Card>

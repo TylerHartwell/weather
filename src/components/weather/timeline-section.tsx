@@ -1,25 +1,23 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 // import CombinedWeatherTimeline from "./combined-weather-timeline"
-import type { VisibleTimeRange } from "@/types/weather"
+import type { VisibleTimeRange, WeatherData } from "@/types/weather"
 
 interface TimelineSectionProps {
-  // historicalData: WeatherDay[]
-  // forecastData: WeatherDay[]
+  forecastData: WeatherData
   visibleTimeRange: VisibleTimeRange | null
   onDayClick: (timestamp: number) => void
   selectedTimestamp: number | null
 }
 
-export default function TimelineSection({ visibleTimeRange, onDayClick, selectedTimestamp }: TimelineSectionProps) {
+export default function TimelineSection({}: TimelineSectionProps) {
   return (
     <div>
       <h3 className="text-lg font-medium mb-2">Weather Timeline</h3>
       <div className="relative">
         <div className="overflow-x-auto pb-4">
           {/* <CombinedWeatherTimeline
-            // historicalData={historicalData}
-            // forecastData={forecastData}
+            forecastData={forecastData}
             visibleTimeRange={visibleTimeRange}
             onDayClick={onDayClick}
             selectedTimestamp={selectedTimestamp}
