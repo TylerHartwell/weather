@@ -16,7 +16,7 @@ export function useWeatherData({ location, windSpeedUnit, temperatureUnit, preci
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const getWeatherData = useCallback(async ({ location, windSpeedUnit, temperatureUnit, precipitationUnit }: FetchWeatherParams) => {
+  const resetWeatherData = useCallback(async ({ location, windSpeedUnit, temperatureUnit, precipitationUnit }: FetchWeatherParams) => {
     setIsLoading(true)
     setError(null)
 
@@ -32,13 +32,13 @@ export function useWeatherData({ location, windSpeedUnit, temperatureUnit, preci
   }, [])
 
   useEffect(() => {
-    getWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  }, [getWeatherData, location, windSpeedUnit, temperatureUnit, precipitationUnit])
+    resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
+  }, [resetWeatherData, location, windSpeedUnit, temperatureUnit, precipitationUnit])
 
   return {
     weatherData,
     isLoading,
     error,
-    fetchWeatherData: getWeatherData
+    resetWeatherData
   }
 }
