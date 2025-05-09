@@ -2,20 +2,20 @@
 
 import type React from "react"
 
-import { useEffect, useRef, useState, useCallback } from "react"
-import type { ChartData, VisibleSeries } from "@/types/weather"
+import { useEffect, useRef, useState, useCallback, useMemo, RefObject } from "react"
+import type { VisibleSeries, WeatherHour, WeatherHourly } from "@/types/weather"
 
 interface WeatherChartProps {
-  data: ChartData[]
+  weatherHourly: WeatherHourly
   onVisibleRangeChange?: (start: number, end: number) => void
   scrollToTimestamp?: number | null
   centerOnCurrent?: boolean
-  containerRef?: React.RefObject<HTMLDivElement> | ((node: HTMLDivElement) => void)
+  containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries?: VisibleSeries
 }
 
 export default function WeatherChart({
-  data,
+  weatherHourly,
   onVisibleRangeChange,
   scrollToTimestamp,
   centerOnCurrent = false,
@@ -34,34 +34,45 @@ export default function WeatherChart({
   const isAutoScrollingRef = useRef<boolean>(false)
   const lastScrollToTimestampRef = useRef<number | null>(null)
 
+  const allHours = useMemo<WeatherHour[]>(() => {
+    const numHours = weatherHourly.time.length
+    const result: WeatherHour[] = []
+
+    for (let i = 0; i < numHours; i++) {
+      result.push({
+        time: weatherHourly.time[i],
+        temperature2m: Math.round(weatherHourly.temperature2m[i]),
+        windSpeed10m: weatherHourly.windSpeed10m[i],
+        precipitationProbability: weatherHourly.precipitationProbability[i]
+      })
+    }
+
+    return result
+  }, [weatherHourly])
+
   // Forward ref to parent component
   useEffect(() => {
-    if (containerRef.current && typeof props.containerRef === "function") {
-      props.containerRef(containerRef.current)
-    } else if (props.containerRef && "current" in props.containerRef) {
+    if (containerRef.current && props.containerRef && "current" in props.containerRef) {
       props.containerRef.current = containerRef.current
     }
-  }, [props.containerRef])
-
-  // Sort data by timestamp to ensure chronological order
-  const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp)
+  }, [props, props.containerRef])
 
   // Find the current time index
-  const currentIndex = sortedData.findIndex(item => item.isCurrent)
+  const currentHourIndex = allHours.findIndex(hour => hour.time.toISOString().split("T")[0] === new Date().toISOString().split("T")[0])
 
   // Memoize the calculateTimePerPixel function
   const calculateTimePerPixel = useCallback(() => {
-    if (sortedData.length <= 1 || !canvasRef.current) return 0
+    if (allHours.length <= 1 || !canvasRef.current) return 0
 
-    const totalTimespan = sortedData[sortedData.length - 1].timestamp - sortedData[0].timestamp
+    const totalTimespan = allHours[allHours.length - 1].time.getTime() - allHours[0].time.getTime()
     const chartWidth = canvasRef.current.width - 80 // 80 is padding * 2
 
     return totalTimespan / chartWidth
-  }, [sortedData])
+  }, [allHours])
 
   // Memoize the calculateVisibleTimeRange function to prevent recreation on each render
   const calculateVisibleTimeRange = useCallback(() => {
-    if (!containerRef.current || !canvasRef.current || sortedData.length === 0) return null
+    if (!containerRef.current || !canvasRef.current || allHours.length === 0) return null
 
     const containerWidth = containerRef.current.clientWidth
     const scrollLeft = containerRef.current.scrollLeft
@@ -70,7 +81,7 @@ export default function WeatherChart({
     if (timePerPixel === 0) return null
 
     // Calculate the exact start and end times based on scroll position
-    const startTime = sortedData[0].timestamp + scrollLeft * timePerPixel
+    const startTime = allHours[0].time.getTime() + scrollLeft * timePerPixel
     const endTime = startTime + containerWidth * timePerPixel
 
     // Round to the nearest minute to avoid floating point issues
@@ -85,7 +96,7 @@ export default function WeatherChart({
       start: roundToMinute(startTime),
       end: roundToMinute(endTime)
     }
-  }, [sortedData, calculateTimePerPixel])
+  }, [allHours, calculateTimePerPixel])
 
   // Draw the chart
   const drawChart = useCallback(() => {
@@ -97,7 +108,7 @@ export default function WeatherChart({
 
     // Set dimensions - make it wider for scrolling
     // Each hour gets more space since we're only viewing 24 hours at a time
-    const width = Math.max(2000, sortedData.length * 30) // Each data point gets 30px width
+    const width = Math.max(2000, allHours.length * 30) // Each data point gets 30px width
     const height = canvas.height
     canvas.width = width
 
@@ -125,10 +136,10 @@ export default function WeatherChart({
     // Find all midnight timestamps (day boundaries)
     const dayBoundaries = new Map<number, { prevDate: string; nextDate: string }>()
 
-    if (sortedData.length > 0) {
+    if (allHours.length > 0) {
       // Get the start and end timestamps
-      const startTime = sortedData[0].timestamp
-      const endTime = sortedData[sortedData.length - 1].timestamp
+      const startTime = allHours[0].time.getTime()
+      const endTime = allHours[allHours.length - 1].time.getTime()
 
       // Find the first midnight after the start time
       const firstDate = new Date(startTime)
@@ -165,7 +176,7 @@ export default function WeatherChart({
     // Draw vertical lines at midnight (day boundaries)
     dayBoundaries.forEach((dateLabels, timestamp) => {
       // Calculate x position for this timestamp
-      const timeOffset = timestamp - sortedData[0].timestamp
+      const timeOffset = timestamp - allHours[0].time.getTime()
       const timePerPixel = calculateTimePerPixel()
       const x = padding + timeOffset / timePerPixel
 
@@ -193,14 +204,14 @@ export default function WeatherChart({
     })
 
     // Find min and max values for temperature
-    const tempValues = sortedData.map(item => item.temp)
+    const tempValues = allHours.map(item => item.temperature2m)
     const minTemp = Math.min(...tempValues) - 2
     const maxTemp = Math.max(...tempValues) + 2
     const tempRange = maxTemp - minTemp
 
     // Find max values for precipitation and wind (min is always 0)
-    const maxPrecip = Math.max(...sortedData.map(item => item.precipitation || 0)) + 5
-    const maxWind = Math.max(...sortedData.map(item => item.wind || 0)) + 5
+    const maxPrecip = Math.max(...allHours.map(item => item.precipitationProbability || 0)) + 5
+    const maxWind = Math.max(...allHours.map(item => item.windSpeed10m || 0)) + 5
 
     // Draw temperature line if visible
     if (visibleSeries.temperature) {
@@ -208,9 +219,9 @@ export default function WeatherChart({
       ctx.strokeStyle = "#FACC15" // Yellow for temperature
       ctx.lineWidth = 3
 
-      sortedData.forEach((point, index) => {
-        const x = padding + (index / (sortedData.length - 1)) * chartWidth
-        const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight
+      allHours.forEach((point, index) => {
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
+        const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight
 
         if (index === 0) {
           ctx.moveTo(x, y)
@@ -221,11 +232,11 @@ export default function WeatherChart({
       ctx.stroke()
 
       // Draw temperature points - but only every few points to avoid clutter
-      sortedData.forEach((point, index) => {
+      allHours.forEach((point, index) => {
         // Only draw points every 6 hours to avoid clutter
         if (index % 6 === 0) {
-          const x = padding + (index / (sortedData.length - 1)) * chartWidth
-          const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight
 
           ctx.beginPath()
           ctx.arc(x, y, 4, 0, Math.PI * 2)
@@ -236,12 +247,12 @@ export default function WeatherChart({
 
       // Draw temperature values - but only every few points to avoid clutter
       ctx.fillStyle = "#FACC15" // Yellow for temperature
-      sortedData.forEach((point, index) => {
+      allHours.forEach((point, index) => {
         // Only draw temperature values every 6 hours to avoid clutter
         if (index % 6 === 0) {
-          const x = padding + (index / (sortedData.length - 1)) * chartWidth
-          const y = height - padding - ((point.temp - minTemp) / tempRange) * chartHeight - 15
-          ctx.fillText(`${point.temp}°`, x, y)
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight - 15
+          ctx.fillText(`${point.temperature2m}°`, x, y)
         }
       })
     }
@@ -252,9 +263,9 @@ export default function WeatherChart({
       ctx.strokeStyle = "#60A5FA" // Blue for precipitation
       ctx.lineWidth = 2
 
-      sortedData.forEach((point, index) => {
-        const x = padding + (index / (sortedData.length - 1)) * chartWidth
-        const y = height - padding - ((point.precipitation || 0) / maxPrecip) * chartHeight
+      allHours.forEach((point, index) => {
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
+        const y = height - padding - ((point.precipitationProbability || 0) / maxPrecip) * chartHeight
 
         if (index === 0) {
           ctx.moveTo(x, y)
@@ -271,9 +282,9 @@ export default function WeatherChart({
       ctx.strokeStyle = "#4ADE80" // Green for wind
       ctx.lineWidth = 2
 
-      sortedData.forEach((point, index) => {
-        const x = padding + (index / (sortedData.length - 1)) * chartWidth
-        const y = height - padding - ((point.wind || 0) / maxWind) * chartHeight
+      allHours.forEach((point, index) => {
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
+        const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
 
         if (index === 0) {
           ctx.moveTo(x, y)
@@ -290,17 +301,17 @@ export default function WeatherChart({
     ctx.textAlign = "center"
 
     // Draw time labels every 3 hours for better readability in 24-hour view
-    sortedData.forEach((point, index) => {
+    allHours.forEach((point, index) => {
       if (index % 3 === 0) {
-        const x = padding + (index / (sortedData.length - 1)) * chartWidth
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
         const y = height - 10
-        ctx.fillText(point.time, x, y)
+        ctx.fillText(point.time.getHours().toString(), x, y)
       }
     })
 
     // Draw vertical line for current time
-    if (currentIndex >= 0) {
-      const currentX = padding + (currentIndex / (sortedData.length - 1)) * chartWidth
+    if (currentHourIndex >= 0) {
+      const currentX = padding + (currentHourIndex / (allHours.length - 1)) * chartWidth
 
       // Draw dashed line
       ctx.beginPath()
@@ -326,7 +337,7 @@ export default function WeatherChart({
       ctx.fillStyle = "#FFFFFF"
       ctx.fill()
     }
-  }, [sortedData, currentIndex, calculateTimePerPixel, visibleSeries])
+  }, [allHours, currentHourIndex, calculateTimePerPixel, visibleSeries])
 
   // Initial chart drawing
   useEffect(() => {
@@ -335,8 +346,11 @@ export default function WeatherChart({
 
   // Handle scrolling and update visible range with throttling
   useEffect(() => {
+    const container = containerRef.current
+    const rafId = requestAnimationFrameRef.current
+
     const handleScrollEvent = () => {
-      if (!containerRef.current) return
+      if (!container) return
 
       // If this is an auto-scroll, don't process it as a manual scroll
       if (isAutoScrollingRef.current) return
@@ -366,7 +380,7 @@ export default function WeatherChart({
       if (now - lastScrollUpdateRef.current > 16) {
         // ~60fps
         lastScrollUpdateRef.current = now
-        setScrollPosition(containerRef.current.scrollLeft)
+        setScrollPosition(container.scrollLeft)
 
         // Update visible range during scrolling for more responsive UI
         if (now - lastScrollUpdateRef.current > 100) {
@@ -380,7 +394,6 @@ export default function WeatherChart({
       }
     }
 
-    const container = containerRef.current
     if (container) {
       // Use passive event listener for better performance
       container.addEventListener("scroll", handleScrollEvent, { passive: true })
@@ -402,8 +415,8 @@ export default function WeatherChart({
       if (scrollEndTimerRef.current) {
         clearTimeout(scrollEndTimerRef.current)
       }
-      if (requestAnimationFrameRef.current) {
-        cancelAnimationFrame(requestAnimationFrameRef.current)
+      if (rafId) {
+        cancelAnimationFrame(rafId)
       }
     }
   }, [calculateVisibleTimeRange, onVisibleRangeChange, visibleTimeRange])
@@ -414,7 +427,7 @@ export default function WeatherChart({
       scrollToTimestamp &&
       containerRef.current &&
       canvasRef.current &&
-      sortedData.length > 0 &&
+      allHours.length > 0 &&
       scrollToTimestamp !== lastScrollToTimestampRef.current
     ) {
       // Update the last scrolled timestamp
@@ -431,7 +444,7 @@ export default function WeatherChart({
       const timePerPixel = calculateTimePerPixel()
       if (timePerPixel === 0) return
 
-      const startTimestamp = sortedData[0].timestamp
+      const startTimestamp = allHours[0].time.getTime()
       const pixelOffset = (dayMiddle - startTimestamp) / timePerPixel
 
       // Center the view on the selected day
@@ -457,14 +470,14 @@ export default function WeatherChart({
         }
       }, 500) // Wait for smooth scroll to complete
     }
-  }, [scrollToTimestamp, sortedData, calculateTimePerPixel, calculateVisibleTimeRange, onVisibleRangeChange])
+  }, [scrollToTimestamp, allHours, calculateTimePerPixel, calculateVisibleTimeRange, onVisibleRangeChange])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
-    if (containerRef.current && currentIndex >= 0 && canvasRef.current && !initialScrollDone && centerOnCurrent) {
+    if (containerRef.current && currentHourIndex >= 0 && canvasRef.current && !initialScrollDone && centerOnCurrent) {
       const padding = 40
       const chartWidth = canvasRef.current.width - padding * 2
-      const currentX = padding + (currentIndex / (sortedData.length - 1)) * chartWidth
+      const currentX = padding + (currentHourIndex / (allHours.length - 1)) * chartWidth
 
       // Center the current time in the viewport
       const containerWidth = containerRef.current.clientWidth
@@ -480,7 +493,7 @@ export default function WeatherChart({
       // Calculate and set the visible time range for 24 hours
       const timePerPixel = calculateTimePerPixel()
       if (timePerPixel > 0) {
-        const visibleStartTime = sortedData[0].timestamp + scrollTo * timePerPixel
+        const visibleStartTime = allHours[0].time.getTime() + scrollTo * timePerPixel
         const visibleEndTime = visibleStartTime + containerWidth * timePerPixel
 
         if (onVisibleRangeChange) {
@@ -493,7 +506,7 @@ export default function WeatherChart({
         isAutoScrollingRef.current = false
       }, 100)
     }
-  }, [currentIndex, sortedData, initialScrollDone, centerOnCurrent, calculateTimePerPixel, onVisibleRangeChange])
+  }, [currentHourIndex, allHours, initialScrollDone, centerOnCurrent, calculateTimePerPixel, onVisibleRangeChange])
 
   return (
     <div className="relative">

@@ -10,7 +10,7 @@ import type { VisibleTimeRange } from "@/types/weather"
 
 import CurrentWeather from "@/components/weather/current-weather"
 
-// import ChartSection from "@/components/weather/chart-section"
+import ChartSection from "@/components/weather/chart-section"
 import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
@@ -26,15 +26,15 @@ export default function WeatherDashboard() {
   const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
 
-  // const handleVisibleRangeChange = useCallback((start: number, end: number) => {
-  //   setVisibleTimeRange(prev => {
-  //     // Only update if the range has actually changed
-  //     if (!prev || Math.abs(prev.start - start) > 100 || Math.abs(prev.end - end) > 100) {
-  //       return { start, end }
-  //     }
-  //     return prev
-  //   })
-  // }, [])
+  const handleVisibleRangeChange = useCallback((start: number, end: number) => {
+    setVisibleTimeRange(prev => {
+      // Only update if the range has actually changed
+      if (!prev || Math.abs(prev.start - start) > 100 || Math.abs(prev.end - end) > 100) {
+        return { start, end }
+      }
+      return prev
+    })
+  }, [])
 
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
@@ -104,12 +104,12 @@ export default function WeatherDashboard() {
               precipitationUnit={precipitationUnit}
             />
             {/* Chart Section */}
-            {/* <ChartSection
-              data={weatherData.hourlyDetailed}
+            <ChartSection
+              weatherHourly={weatherData.hourly}
               onVisibleRangeChange={handleVisibleRangeChange}
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
-            /> */}
+            />
             Timeline Section
             <TimelineSection
               weatherDaily={weatherData.daily}

@@ -23,6 +23,10 @@ export interface WeatherHourly {
   precipitationProbability: Float32Array
 }
 
+export type WeatherHour = {
+  [K in keyof WeatherHourly]: WeatherHourly[K] extends Array<infer U> ? U : WeatherHourly[K] extends Float32Array ? number : never
+}
+
 export interface WeatherDaily {
   time: Date[]
   weatherCode: Float32Array
