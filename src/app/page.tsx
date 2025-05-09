@@ -6,16 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { useWeatherData } from "@/hooks/use-weather-data"
-// import type { VisibleTimeRange } from "@/types/weather"
+import type { VisibleTimeRange } from "@/types/weather"
 
 import CurrentWeather from "@/components/weather/current-weather"
 
 // import ChartSection from "@/components/weather/chart-section"
-// import TimelineSection from "@/components/weather/timeline-section"
 import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
+import TimelineSection from "@/components/weather/timeline-section"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
@@ -23,8 +23,8 @@ export default function WeatherDashboard() {
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  // const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
-  // const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
+  const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
+  const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
 
   // const handleVisibleRangeChange = useCallback((start: number, end: number) => {
   //   setVisibleTimeRange(prev => {
@@ -36,9 +36,9 @@ export default function WeatherDashboard() {
   //   })
   // }, [])
 
-  // const handleDayClick = useCallback((timestamp: number) => {
-  //   setSelectedTimestamp(timestamp)
-  // }, [])
+  const handleDayClick = useCallback((timestamp: number) => {
+    setSelectedTimestamp(timestamp)
+  }, [])
 
   const toggleWindUnit = () => {
     setWindSpeedUnit(prev => (prev === "mph" ? "kmh" : "mph"))
@@ -110,14 +110,13 @@ export default function WeatherDashboard() {
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
             /> */}
-            {/* Timeline Section */}
-            {/* <TimelineSection
-              // historicalData={weatherData.historical}
-              forecastData={weatherData.forecast}
+            Timeline Section
+            <TimelineSection
+              weatherDaily={weatherData.daily}
               visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}
-            /> */}
+            />
             Search
             <SearchBar onSearch={handleSearch} initialQuery={location} />
           </div>

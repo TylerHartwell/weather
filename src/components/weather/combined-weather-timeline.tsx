@@ -1,61 +1,52 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useState, useEffect, useRef } from "react"
-import type { WeatherData, VisibleTimeRange } from "@/types/weather"
+import { useState, useEffect, useRef, useCallback } from "react"
+import type { WeatherDaily, VisibleTimeRange, WeatherDay } from "@/types/weather"
 import WeatherIcon from "./weather-icon"
+import { getWeatherDescription } from "@/lib/weather-utils"
 
 interface CombinedWeatherTimelineProps {
-  forecastData: WeatherData
+  weatherDaily: WeatherDaily
   visibleTimeRange?: VisibleTimeRange | null
   onDayClick?: (timestamp: number) => void
   selectedTimestamp?: number | null
 }
 
-export default function CombinedWeatherTimeline({
-  // historicalData,
-  forecastData,
-  visibleTimeRange,
-  onDayClick,
-  selectedTimestamp
-}: CombinedWeatherTimelineProps) {
-  const [allDays, setAllDays] = useState<WeatherData | null>(null)
+export default function CombinedWeatherTimeline({ weatherDaily, visibleTimeRange, onDayClick, selectedTimestamp }: CombinedWeatherTimelineProps) {
+  const numDays = weatherDaily.time.length
+  const [allDays, setAllDays] = useState<WeatherDay[]>([])
   const [bracketPosition, setBracketPosition] = useState<{ left: number; width: number } | null>(null)
   const [highlightedDayId, setHighlightedDayId] = useState<string | null>(null)
   const lastVisibleRangeRef = useRef<VisibleTimeRange | null>(null)
 
-  // Combine historical and forecast data with today in the middle
-  useEffect(() => {
-    const today = new Date()
-    const todayTimestamp = today.setHours(0, 0, 0, 0)
-    const todayDateStr = today.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  const today = new Date()
 
-    // const enhancedHistorical = historicalData.map((day, index) => {
-    //   // Calculate approximate timestamp for historical days (going backwards from today)
-    //   const dayTimestamp = todayTimestamp - (historicalData.length - index) * 24 * 60 * 60 * 1000
-    //   return { ...day, timestamp: dayTimestamp }
-    // })
+  const resetAllDays = useCallback(() => {
+    const newAllDays: WeatherDay[] = []
 
-    const todayData = {
-      day: "Today",
-      date: todayDateStr,
-      icon: forecastData[0].icon,
-      highTemp: forecastData[0].highTemp,
-      lowTemp: forecastData[0].lowTemp,
-      timestamp: todayTimestamp
+    for (let i = 0; i < numDays; i++) {
+      newAllDays.push({
+        time: weatherDaily.time[i],
+        weatherCode: weatherDaily.weatherCode[i],
+        temperature2mMax: weatherDaily.temperature2mMax[i],
+        windSpeed10mMax: weatherDaily.windSpeed10mMax[i],
+        windDirection10mDominant: weatherDaily.windDirection10mDominant[i],
+        sunrise: weatherDaily.sunrise[i],
+        sunset: weatherDaily.sunset[i],
+        uvIndexMax: weatherDaily.uvIndexMax[i],
+        precipitationProbabilityMax: weatherDaily.precipitationProbabilityMax[i],
+        precipitationSum: weatherDaily.precipitationSum[i],
+        temperature2mMin: weatherDaily.temperature2mMin[i]
+      })
     }
 
-    const enhancedForecast = forecastData.slice(1).map((day, index) => {
-      // Calculate approximate timestamp for forecast days (going forward from today)
-      const dayTimestamp = todayTimestamp + (index + 1) * 24 * 60 * 60 * 1000
-      const date = new Date(dayTimestamp)
-      const dateStr = date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      return { ...day, date: dateStr, timestamp: dayTimestamp }
-    })
+    setAllDays(newAllDays)
+  }, [numDays, weatherDaily])
 
-    setAllDays([todayData, ...enhancedForecast])
-  }, [forecastData])
+  useEffect(() => {
+    resetAllDays()
+  }, [numDays, resetAllDays, weatherDaily])
 
   // Calculate bracket position based on visible time range
   useEffect(() => {
@@ -68,8 +59,8 @@ export default function CombinedWeatherTimeline({
     if (!timelineEl) return
 
     const timelineWidth = timelineEl.scrollWidth
-    const timelineStart = allDays[0].timestamp || 0
-    const timelineEnd = allDays[allDays.length - 1].timestamp || 0
+    const timelineStart = allDays[0].time.getTime() || 0
+    const timelineEnd = allDays[allDays.length - 1].time.getTime() || 0
     const timelineRange = timelineEnd - timelineStart
 
     if (timelineRange === 0) return
@@ -94,14 +85,14 @@ export default function CombinedWeatherTimeline({
     if (selectedTimestamp && allDays.length > 0) {
       // Find the day that contains this timestamp
       const selectedDay = allDays.find(day => {
-        if (!day.timestamp) return false
-        const dayStart = day.timestamp
+        if (!day.time) return false
+        const dayStart = day.time.setHours(0, 0, 0, 0)
         const dayEnd = dayStart + 24 * 60 * 60 * 1000
         return selectedTimestamp >= dayStart && selectedTimestamp < dayEnd
       })
 
-      if (selectedDay && selectedDay.timestamp) {
-        const dayId = `day-${selectedDay.timestamp}`
+      if (selectedDay && selectedDay.time) {
+        const dayId = `day-${selectedDay.time}`
         setHighlightedDayId(dayId)
       }
     }
@@ -132,10 +123,10 @@ export default function CombinedWeatherTimeline({
     let maxOverlapDayId = null
 
     allDays.forEach(day => {
-      if (!day.timestamp) return
+      if (!day.time) return
 
       // Calculate the start and end of this day
-      const dayStart = day.timestamp
+      const dayStart = day.time.setHours(0, 0, 0, 0)
       const dayEnd = dayStart + 24 * 60 * 60 * 1000
 
       // Calculate overlap with visible range
@@ -187,33 +178,24 @@ export default function CombinedWeatherTimeline({
       <div id="weather-timeline" className="flex space-x-2 min-w-max">
         {allDays.map((day, index) => {
           // Create a unique ID for this day using timestamp
-          const dayId = `day-${day.timestamp}`
+          const dayId = `day-${day.time}`
 
           return (
             <Card
               key={`timeline-day-${index}`}
               className={`bg-gray-800 border-gray-700 p-2 flex flex-col items-center min-w-[70px] cursor-pointer hover:bg-gray-700 transition-colors ${
-                day.day === "Today" ? "border-primary" : ""
+                day.time.getDate() === today.getDate() ? "border-primary" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
-              onClick={() => handleDayClick(day.timestamp || 0)}
+              onClick={() => handleDayClick(day.time.getTime() || 0)}
             >
-              <div className="text-sm font-medium">{day.day}</div>
-              <div className="text-xs text-gray-400">{day.date}</div>
-              {day.day === "Today" ? (
-                <Badge variant="default" className="bg-primary text-xs mb-1">
-                  Current
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="bg-gray-700 text-xs mb-1">
-                  {/* {index < historicalData.length ? "Past" : "Future"} */}
-                  {""}
-                </Badge>
-              )}
+              <div className="text-sm font-medium">{day.time.toLocaleDateString("en-US", { weekday: "short" })}</div>
+              <div className="text-xs text-gray-400">{day.time.getDate()}</div>
               <div className="my-2">
-                <WeatherIcon type={day.icon} size="sm" />
+                <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
+                {`Code ${day.weatherCode}`}
               </div>
               <div className="text-sm">
-                {day.highTemp}° {day.lowTemp}°
+                {Math.round(day.temperature2mMax)}° {Math.round(day.temperature2mMin)}°
               </div>
             </Card>
           )

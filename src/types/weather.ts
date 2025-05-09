@@ -37,6 +37,10 @@ export interface WeatherDaily {
   temperature2mMin: Float32Array
 }
 
+export type WeatherDay = {
+  [K in keyof WeatherDaily]: WeatherDaily[K] extends Array<infer U> ? U : WeatherDaily[K] extends Float32Array ? number : never
+}
+
 export interface VisibleSeries {
   temperature: boolean
   precipitation: boolean
