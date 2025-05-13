@@ -42,21 +42,18 @@ export async function fetchWeatherData(
       "latitude": locationData.latitude,
       "longitude": locationData.longitude,
       "daily": [
-        "weather_code",
         "temperature_2m_max",
+        "temperature_2m_min",
         "wind_speed_10m_max",
         "wind_direction_10m_dominant",
-        "sunrise",
-        "sunset",
-        "uv_index_max",
         "precipitation_probability_max",
-        "precipitation_sum",
-        "temperature_2m_min"
+        "weather_code"
       ],
       "hourly": ["temperature_2m", "wind_speed_10m", "precipitation_probability"],
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "timezone": locationData.timezone,
       "past_days": 7,
+      "forecast_days": 7,
       "wind_speed_unit": windSpeedUnit,
       "temperature_unit": temperatureUnit,
       "precipitation_unit": precipitationUnit
@@ -76,9 +73,6 @@ export async function fetchWeatherData(
     const current = response.current()!
     const hourly = response.hourly()!
     const daily = response.daily()!
-
-    const sunrise = daily.variables(4)!
-    const sunset = daily.variables(5)!
 
     const weatherData = {
       current: {
@@ -102,16 +96,12 @@ export async function fetchWeatherData(
         time: [...Array((Number(daily.timeEnd()) - Number(daily.time())) / daily.interval())].map(
           (_, i) => new Date((Number(daily.time()) + i * daily.interval() + utcOffsetSeconds) * 1000)
         ),
-        weatherCode: daily.variables(0)!.valuesArray()!,
-        temperature2mMax: daily.variables(1)!.valuesArray()!,
+        temperature2mMax: daily.variables(0)!.valuesArray()!,
+        temperature2mMin: daily.variables(1)!.valuesArray()!,
         windSpeed10mMax: daily.variables(2)!.valuesArray()!,
         windDirection10mDominant: daily.variables(3)!.valuesArray()!,
-        sunrise: [...Array(sunrise.valuesInt64Length())].map((_, i) => new Date((Number(sunrise.valuesInt64(i)) + utcOffsetSeconds) * 1000)),
-        sunset: [...Array(sunset.valuesInt64Length())].map((_, i) => new Date((Number(sunset.valuesInt64(i)) + utcOffsetSeconds) * 1000)),
-        uvIndexMax: daily.variables(6)!.valuesArray()!,
-        precipitationProbabilityMax: daily.variables(7)!.valuesArray()!,
-        precipitationSum: daily.variables(8)!.valuesArray()!,
-        temperature2mMin: daily.variables(9)!.valuesArray()!
+        precipitationProbabilityMax: daily.variables(4)!.valuesArray()!,
+        weatherCode: daily.variables(5)!.valuesArray()!
       },
       timezone,
       timezoneAbbreviation,
@@ -121,7 +111,9 @@ export async function fetchWeatherData(
       temperatureUnit,
       precipitationUnit
     }
-    console.log("Weather Data: ", weatherData)
+    for (let i = 0; i < weatherData.daily.time.length; i++) {
+      console.log(weatherData.daily.time[i].toISOString(), weatherData.daily.precipitationProbabilityMax[i])
+    }
 
     return weatherData
   } catch (error) {

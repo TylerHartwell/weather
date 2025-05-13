@@ -28,16 +28,14 @@ export default function CombinedWeatherTimeline({ weatherDaily, visibleTimeRange
     for (let i = 0; i < numDays; i++) {
       newAllDays.push({
         time: weatherDaily.time[i],
-        weatherCode: weatherDaily.weatherCode[i],
+
         temperature2mMax: weatherDaily.temperature2mMax[i],
+        temperature2mMin: weatherDaily.temperature2mMin[i],
         windSpeed10mMax: weatherDaily.windSpeed10mMax[i],
         windDirection10mDominant: weatherDaily.windDirection10mDominant[i],
-        sunrise: weatherDaily.sunrise[i],
-        sunset: weatherDaily.sunset[i],
-        uvIndexMax: weatherDaily.uvIndexMax[i],
         precipitationProbabilityMax: weatherDaily.precipitationProbabilityMax[i],
-        precipitationSum: weatherDaily.precipitationSum[i],
-        temperature2mMin: weatherDaily.temperature2mMin[i]
+
+        weatherCode: weatherDaily.weatherCode[i]
       })
     }
 
@@ -184,7 +182,7 @@ export default function CombinedWeatherTimeline({ weatherDaily, visibleTimeRange
             <Card
               key={`timeline-day-${index}`}
               className={`bg-gray-800 border-gray-700 p-2 flex flex-col items-center min-w-[70px] cursor-pointer hover:bg-gray-700 transition-colors ${
-                day.time.getDate() === today.getDate() ? "border-primary" : ""
+                day.time.getDate() === today.getDate() ? "border-accent" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
               onClick={() => handleDayClick(day.time.getTime() || 0)}
             >

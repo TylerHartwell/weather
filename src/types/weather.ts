@@ -1,5 +1,3 @@
-// Types for weather data
-
 export interface WeatherData {
   current: WeatherCurrent
   hourly: WeatherHourly
@@ -29,16 +27,12 @@ export type WeatherHour = {
 
 export interface WeatherDaily {
   time: Date[]
-  weatherCode: Float32Array
   temperature2mMax: Float32Array
+  temperature2mMin: Float32Array
   windSpeed10mMax: Float32Array
   windDirection10mDominant: Float32Array
-  sunrise: Date[]
-  sunset: Date[]
-  uvIndexMax: Float32Array
   precipitationProbabilityMax: Float32Array
-  precipitationSum: Float32Array
-  temperature2mMin: Float32Array
+  weatherCode: Float32Array
 }
 
 export type WeatherDay = {

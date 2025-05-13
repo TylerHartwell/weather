@@ -24,10 +24,10 @@ export default function WeatherChart({
 }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [scrollPosition, setScrollPosition] = useState(0)
+  // const [scrollPosition, setScrollPosition] = useState(0)
   const [visibleTimeRange, setVisibleTimeRange] = useState<{ start: number; end: number } | null>(null)
   const [initialScrollDone, setInitialScrollDone] = useState(false)
-  const [isScrolling, setIsScrolling] = useState(false)
+  // const [isScrolling, setIsScrolling] = useState(false)
   const scrollEndTimerRef = useRef<NodeJS.Timeout | null>(null)
   const lastScrollUpdateRef = useRef<number>(0)
   const requestAnimationFrameRef = useRef<number | null>(null)
@@ -62,7 +62,7 @@ export default function WeatherChart({
 
   // Memoize the calculateTimePerPixel function
   const calculateTimePerPixel = useCallback(() => {
-    if (allHours.length <= 1 || !canvasRef.current) return 0
+    if (allHours.length < 2 || !canvasRef.current) return 0
 
     const totalTimespan = allHours[allHours.length - 1].time.getTime() - allHours[0].time.getTime()
     const chartWidth = canvasRef.current.width - 80 // 80 is padding * 2
@@ -234,7 +234,7 @@ export default function WeatherChart({
       // Draw temperature points - but only every few points to avoid clutter
       allHours.forEach((point, index) => {
         // Only draw points every 6 hours to avoid clutter
-        if (index % 6 === 0) {
+        if (index % 3 === 0) {
           const x = padding + (index / (allHours.length - 1)) * chartWidth
           const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight
 
@@ -249,7 +249,7 @@ export default function WeatherChart({
       ctx.fillStyle = "#FACC15" // Yellow for temperature
       allHours.forEach((point, index) => {
         // Only draw temperature values every 6 hours to avoid clutter
-        if (index % 6 === 0) {
+        if (index % 3 === 0) {
           const x = padding + (index / (allHours.length - 1)) * chartWidth
           const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight - 15
           ctx.fillText(`${point.temperature2m}°`, x, y)
@@ -356,7 +356,7 @@ export default function WeatherChart({
       if (isAutoScrollingRef.current) return
 
       // Set scrolling state
-      setIsScrolling(true)
+      // setIsScrolling(true)
 
       // Clear any existing scroll end timer
       if (scrollEndTimerRef.current) {
@@ -365,7 +365,7 @@ export default function WeatherChart({
 
       // Set a timer to detect when scrolling stops
       scrollEndTimerRef.current = setTimeout(() => {
-        setIsScrolling(false)
+        // setIsScrolling(false)
 
         // Update the visible range when scrolling stops
         const range = calculateVisibleTimeRange()
@@ -380,7 +380,7 @@ export default function WeatherChart({
       if (now - lastScrollUpdateRef.current > 16) {
         // ~60fps
         lastScrollUpdateRef.current = now
-        setScrollPosition(container.scrollLeft)
+        // setScrollPosition(container.scrollLeft)
 
         // Update visible range during scrolling for more responsive UI
         if (now - lastScrollUpdateRef.current > 100) {
@@ -487,7 +487,7 @@ export default function WeatherChart({
       isAutoScrollingRef.current = true
 
       containerRef.current.scrollLeft = scrollTo
-      setScrollPosition(scrollTo)
+      // setScrollPosition(scrollTo)
       setInitialScrollDone(true)
 
       // Calculate and set the visible time range for 24 hours
