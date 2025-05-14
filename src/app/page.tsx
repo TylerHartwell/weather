@@ -95,7 +95,7 @@ export default function WeatherDashboard() {
           <div className="flex flex-col space-y-6">
             Current Weather
             <CurrentWeather
-              data={weatherData.current}
+              weatherCurrent={weatherData.current}
               toggleTempUnit={toggleTempUnit}
               togglePrecipitationUnit={togglePrecipitationUnit}
               toggleWindUnit={toggleWindUnit}
@@ -106,16 +106,20 @@ export default function WeatherDashboard() {
             {/* Chart Section */}
             <ChartSection
               weatherHourly={weatherData.hourly}
+              hourDiffFromLocal={weatherData.hourDiffFromLocal}
               onVisibleRangeChange={handleVisibleRangeChange}
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
+              timezone={weatherData.timezone}
             />
             Timeline Section
             <TimelineSection
               weatherDaily={weatherData.daily}
+              hourDiffFromLocal={weatherData.hourDiffFromLocal}
               visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}
+              timezone={weatherData.timezone}
             />
             Search
             <SearchBar onSearch={handleSearch} initialQuery={location} />

@@ -8,9 +8,18 @@ interface TimelineSectionProps {
   visibleTimeRange: VisibleTimeRange | null
   onDayClick: (timestamp: number) => void
   selectedTimestamp: number | null
+  hourDiffFromLocal: number
+  timezone: string | null
 }
 
-export default function TimelineSection({ weatherDaily, visibleTimeRange, onDayClick, selectedTimestamp }: TimelineSectionProps) {
+export default function TimelineSection({
+  weatherDaily,
+  visibleTimeRange,
+  onDayClick,
+  selectedTimestamp,
+  hourDiffFromLocal,
+  timezone
+}: TimelineSectionProps) {
   return (
     <div>
       <h3 className="text-lg font-medium mb-2">Weather Timeline</h3>
@@ -18,9 +27,11 @@ export default function TimelineSection({ weatherDaily, visibleTimeRange, onDayC
         <div className="overflow-x-auto pb-4">
           <CombinedWeatherTimeline
             weatherDaily={weatherDaily}
+            hourDiffFromLocal={hourDiffFromLocal}
             visibleTimeRange={visibleTimeRange}
             onDayClick={onDayClick}
             selectedTimestamp={selectedTimestamp}
+            timezone={timezone}
           />
         </div>
         <div className="absolute top-1/2 -translate-y-1/2 -left-2 z-10">

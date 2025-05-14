@@ -2,6 +2,14 @@ export interface WeatherData {
   current: WeatherCurrent
   hourly: WeatherHourly
   daily: WeatherDaily
+  timezone: string | null
+  timezoneAbbreviation: string | null
+  latitude: number
+  longitude: number
+  windSpeedUnit: WindSpeedUnit
+  temperatureUnit: TemperatureUnit
+  precipitationUnit: PrecipitationUnit
+  hourDiffFromLocal: number
 }
 
 export interface WeatherCurrent {

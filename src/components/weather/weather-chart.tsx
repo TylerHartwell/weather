@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-
+import { DateTime } from "luxon"
 import { useEffect, useRef, useState, useCallback, useMemo, RefObject } from "react"
 import type { VisibleSeries, WeatherHour, WeatherHourly } from "@/types/weather"
+import { isSameHour } from "@/lib/weather-utils"
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
@@ -12,6 +13,8 @@ interface WeatherChartProps {
   centerOnCurrent?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries?: VisibleSeries
+  hourDiffFromLocal: number
+  timezone: string | null
 }
 
 export default function WeatherChart({
@@ -20,6 +23,8 @@ export default function WeatherChart({
   scrollToTimestamp,
   centerOnCurrent = false,
   visibleSeries = { temperature: true, precipitation: true, wind: true },
+  hourDiffFromLocal,
+  timezone,
   ...props
 }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -58,7 +63,7 @@ export default function WeatherChart({
   }, [props, props.containerRef])
 
   // Find the current time index
-  const currentHourIndex = allHours.findIndex(hour => hour.time.toISOString().split("T")[0] === new Date().toISOString().split("T")[0])
+  const currentHourIndex = allHours.findIndex(hour => isSameHour(DateTime.fromJSDate(hour.time), DateTime.now()))
 
   // Memoize the calculateTimePerPixel function
   const calculateTimePerPixel = useCallback(() => {
@@ -81,20 +86,19 @@ export default function WeatherChart({
     if (timePerPixel === 0) return null
 
     // Calculate the exact start and end times based on scroll position
-    const startTime = allHours[0].time.getTime() + scrollLeft * timePerPixel
-    const endTime = startTime + containerWidth * timePerPixel
+    const baseTime = DateTime.fromJSDate(allHours[0].time)
+    const startTimeMillis = baseTime.toMillis() + scrollLeft * timePerPixel
+    const endTimeMillis = startTimeMillis + containerWidth * timePerPixel
 
     // Round to the nearest minute to avoid floating point issues
-    const roundToMinute = (timestamp: number) => {
-      const date = new Date(timestamp)
-      const minutes = Math.round(date.getMinutes() / 1) * 1
-      date.setMinutes(minutes, 0, 0)
-      return date.getTime()
+    const roundToMinute = (millis: number): number => {
+      const dt = DateTime.fromMillis(millis)
+      return dt.set({ second: 0, millisecond: 0 }).toMillis()
     }
 
     return {
-      start: roundToMinute(startTime),
-      end: roundToMinute(endTime)
+      start: roundToMinute(startTimeMillis),
+      end: roundToMinute(endTimeMillis)
     }
   }, [allHours, calculateTimePerPixel])
 
@@ -138,28 +142,29 @@ export default function WeatherChart({
 
     if (allHours.length > 0) {
       // Get the start and end timestamps
-      const startTime = allHours[0].time.getTime()
-      const endTime = allHours[allHours.length - 1].time.getTime()
+      const startTime = DateTime.fromJSDate(allHours[0].time).toMillis()
+      const endTime = DateTime.fromJSDate(allHours[allHours.length - 1].time).toMillis()
 
       // Find the first midnight after the start time
-      const firstDate = new Date(startTime)
-      firstDate.setHours(0, 0, 0, 0)
-      if (firstDate.getTime() < startTime) {
-        // If start time is after midnight, move to next day
-        firstDate.setDate(firstDate.getDate() + 1)
+      const firstDate = DateTime.fromMillis(startTime)
+        .setZone(timezone || "local")
+        .startOf("day")
+
+      if (firstDate.toMillis() < startTime) {
+        // If start time is after midnight, move to the next day
+        firstDate.plus({ days: 1 })
       }
 
       // Generate all midnight timestamps between start and end
-      let currentMidnight = firstDate.getTime()
+      let currentMidnight = firstDate.toMillis()
       while (currentMidnight <= endTime) {
-        const midnightDate = new Date(currentMidnight)
+        const midnightDate = DateTime.fromMillis(currentMidnight)
 
         // Get the date strings for the day before and after midnight
-        const prevDay = new Date(currentMidnight)
-        prevDay.setDate(prevDay.getDate() - 1)
-        const prevDateStr = prevDay.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        const prevDay = midnightDate.minus({ days: 1 })
+        const prevDateStr = prevDay.toJSDate().toLocaleDateString("en-US", { month: "short", day: "numeric" })
 
-        const nextDateStr = midnightDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        const nextDateStr = midnightDate.toJSDate().toLocaleDateString("en-US", { month: "short", day: "numeric" })
 
         // Store the boundary with its date labels
         dayBoundaries.set(currentMidnight, {
@@ -168,15 +173,14 @@ export default function WeatherChart({
         })
 
         // Move to next midnight
-        midnightDate.setDate(midnightDate.getDate() + 1)
-        currentMidnight = midnightDate.getTime()
+        currentMidnight = midnightDate.plus({ days: 1 }).toMillis()
       }
     }
 
     // Draw vertical lines at midnight (day boundaries)
     dayBoundaries.forEach((dateLabels, timestamp) => {
       // Calculate x position for this timestamp
-      const timeOffset = timestamp - allHours[0].time.getTime()
+      const timeOffset = timestamp - DateTime.fromJSDate(allHours[0].time).toMillis()
       const timePerPixel = calculateTimePerPixel()
       const x = padding + timeOffset / timePerPixel
 
@@ -302,10 +306,11 @@ export default function WeatherChart({
 
     // Draw time labels every 3 hours for better readability in 24-hour view
     allHours.forEach((point, index) => {
-      if (index % 3 === 0) {
+      if (index % 2 === 0) {
         const x = padding + (index / (allHours.length - 1)) * chartWidth
         const y = height - 10
-        ctx.fillText(point.time.getHours().toString(), x, y)
+        const adjustedHour = (point.time.getHours() + hourDiffFromLocal + 24) % 24
+        ctx.fillText(adjustedHour.toString(), x, y)
       }
     })
 
@@ -329,7 +334,14 @@ export default function WeatherChart({
       ctx.fillStyle = "#FFFFFF"
       ctx.font = "bold 12px Arial"
       ctx.textAlign = "center"
-      ctx.fillText("NOW", currentX, padding - 10)
+
+      const now = DateTime.now()
+
+      const hourInTarget = (now.hour + hourDiffFromLocal + 24) % 24
+
+      const localHour = DateTime.fromJSDate(allHours[currentHourIndex].time).hour
+
+      ctx.fillText(`${hourInTarget} NOW (${localHour} your time)`, currentX, padding - 10)
 
       // Draw circle at the top of the line
       ctx.beginPath()
@@ -337,7 +349,7 @@ export default function WeatherChart({
       ctx.fillStyle = "#FFFFFF"
       ctx.fill()
     }
-  }, [allHours, currentHourIndex, calculateTimePerPixel, visibleSeries])
+  }, [allHours, currentHourIndex, calculateTimePerPixel, visibleSeries, hourDiffFromLocal, timezone])
 
   // Initial chart drawing
   useEffect(() => {
@@ -376,7 +388,7 @@ export default function WeatherChart({
       }, 150)
 
       // Throttle scroll position updates to improve performance
-      const now = Date.now()
+      const now = DateTime.now().toMillis()
       if (now - lastScrollUpdateRef.current > 16) {
         // ~60fps
         lastScrollUpdateRef.current = now
@@ -434,9 +446,8 @@ export default function WeatherChart({
       lastScrollToTimestampRef.current = scrollToTimestamp
 
       // Find the exact day start for the selected timestamp
-      const selectedDate = new Date(scrollToTimestamp)
-      selectedDate.setHours(0, 0, 0, 0)
-      const dayStart = selectedDate.getTime()
+      const selectedDate = DateTime.fromMillis(scrollToTimestamp).startOf("day")
+      const dayStart = selectedDate.toMillis()
 
       // Calculate the middle of the day (noon) for better centering
       const dayMiddle = dayStart + 12 * 60 * 60 * 1000

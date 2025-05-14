@@ -3,7 +3,7 @@ import WeatherIcon from "./weather-icon"
 import { getDayName, getWeatherDescription } from "@/lib/weather-utils"
 
 interface CurrentWeatherProps {
-  data: WeatherCurrent
+  weatherCurrent: WeatherCurrent
   toggleTempUnit: () => void
   togglePrecipitationUnit: () => void
   toggleWindUnit: () => void
@@ -13,7 +13,7 @@ interface CurrentWeatherProps {
 }
 
 export default function CurrentWeather({
-  data,
+  weatherCurrent,
   toggleTempUnit,
   togglePrecipitationUnit,
   toggleWindUnit,
@@ -26,23 +26,23 @@ export default function CurrentWeather({
       <div className="flex items-center">
         <WeatherIcon type={"sunny"} size="lg" />
         <div className="text-6xl font-semibold ml-2" onClick={toggleTempUnit}>
-          {Math.round(data.temperature2m)}
+          {Math.round(weatherCurrent.temperature2m)}
           <span className="text-2xl">{temperatureUnit === "fahrenheit" ? "F" : "C"}</span>
         </div>
         <div className="flex flex-col ml-2 text-gray-400">
           <span onClick={togglePrecipitationUnit}>
-            Precipitation: {data.precipitation} {precipitationUnit}
+            Precipitation: {weatherCurrent.precipitation} {precipitationUnit}
           </span>
-          <span>Humidity: {data.relativeHumidity2m}%</span>
+          <span>Humidity: {weatherCurrent.relativeHumidity2m}%</span>
           <span onClick={toggleWindUnit}>
-            Wind: {Math.round(data.windSpeed10m)} {windSpeedUnit}
+            Wind: {Math.round(weatherCurrent.windSpeed10m)} {windSpeedUnit}
           </span>
         </div>
       </div>
       <div className="text-right">
         <div className="text-2xl">Weather</div>
-        <div className="text-lg">{getDayName(data.time.getTime())}</div>
-        <div className="text-lg">{getWeatherDescription(data.weatherCode)}</div>
+        <div className="text-lg">{getDayName(weatherCurrent.time.getTime())}</div>
+        <div className="text-lg">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
       </div>
     </div>
   )

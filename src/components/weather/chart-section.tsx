@@ -10,9 +10,18 @@ interface ChartSectionProps {
   onVisibleRangeChange: (start: number, end: number) => void
   scrollToTimestamp?: number | null
   centerOnCurrent?: boolean
+  hourDiffFromLocal: number
+  timezone: string | null
 }
 
-export default function ChartSection({ weatherHourly, onVisibleRangeChange, scrollToTimestamp, centerOnCurrent = false }: ChartSectionProps) {
+export default function ChartSection({
+  weatherHourly,
+  onVisibleRangeChange,
+  scrollToTimestamp,
+  centerOnCurrent = false,
+  hourDiffFromLocal,
+  timezone
+}: ChartSectionProps) {
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
     temperature: true,
     precipitation: true,
@@ -37,6 +46,8 @@ export default function ChartSection({ weatherHourly, onVisibleRangeChange, scro
         centerOnCurrent={centerOnCurrent}
         containerRef={chartContainerRef}
         visibleSeries={visibleSeries}
+        hourDiffFromLocal={hourDiffFromLocal}
+        timezone={timezone}
       />
     </div>
   )
