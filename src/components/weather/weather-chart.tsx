@@ -44,7 +44,7 @@ export default function WeatherChart({
       result.push({
         time: weatherHourly.time[i],
         temperature2m: Math.round(weatherHourly.temperature2m[i]),
-        windSpeed10m: weatherHourly.windSpeed10m[i],
+        windSpeed10m: Math.round(weatherHourly.windSpeed10m[i]),
         precipitationProbability: weatherHourly.precipitationProbability[i]
       })
     }
@@ -193,7 +193,7 @@ export default function WeatherChart({
 
       // Draw date labels on both sides of the boundary
       ctx.fillStyle = "#9CA3AF"
-      ctx.font = "10px Arial"
+      ctx.font = "bold 16px Arial"
 
       // Draw previous date label (left side)
       ctx.textAlign = "right"
@@ -235,7 +235,7 @@ export default function WeatherChart({
       // Draw temperature points - but only every few points to avoid clutter
       allHours.forEach((point, index) => {
         // Only draw points every 6 hours to avoid clutter
-        if (index % 3 === 0) {
+        if (index % 2 === 0) {
           const x = padding + (index / (allHours.length - 1)) * chartWidth
           const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight
 
@@ -250,7 +250,7 @@ export default function WeatherChart({
       ctx.fillStyle = "#FACC15" // Yellow for temperature
       allHours.forEach((point, index) => {
         // Only draw temperature values every 6 hours to avoid clutter
-        if (index % 3 === 0) {
+        if (index % 2 === 0) {
           const x = padding + (index / (allHours.length - 1)) * chartWidth
           const y = height - padding - ((point.temperature2m - minTemp) / tempRange) * chartHeight - 15
           ctx.fillText(`${point.temperature2m}°`, x, y)
@@ -294,11 +294,33 @@ export default function WeatherChart({
         }
       })
       ctx.stroke()
+
+      ctx.fillStyle = "#4ADE80"
+      allHours.forEach((point, index) => {
+        if (index % 2 === 0) {
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight - 15
+          ctx.fillText(`${point.windSpeed10m}`, x, y)
+        }
+      })
+
+      allHours.forEach((point, index) => {
+        // Only draw points every 6 hours to avoid clutter
+        if (index % 2 === 0) {
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
+
+          ctx.beginPath()
+          ctx.arc(x, y, 4, 0, Math.PI * 2)
+          ctx.fillStyle = "##4ADE80" // Yellow for temperature
+          ctx.fill()
+        }
+      })
     }
 
     // Draw time labels - but only every few hours to avoid clutter
     ctx.fillStyle = "#FFFFFF"
-    ctx.font = "12px Arial"
+    ctx.font = "18px Arial"
     ctx.textAlign = "center"
 
     // Draw time labels every 2 hours for better readability in 24-hour view
@@ -329,7 +351,7 @@ export default function WeatherChart({
 
       // Draw "NOW" label
       ctx.fillStyle = "#FFFFFF"
-      ctx.font = "bold 12px Arial"
+      ctx.font = "bold 16px Arial"
       ctx.textAlign = "center"
 
       const target = DateTime.now().setZone(timezone || "local")
@@ -522,7 +544,7 @@ export default function WeatherChart({
     <div className="relative">
       <div
         ref={containerRef}
-        className="w-full h-64 bg-gray-800 rounded-md overflow-x-auto hide-scrollbar"
+        className="w-full h-48 bg-gray-800 rounded-md overflow-x-auto hide-scrollbar"
         style={{
           WebkitOverflowScrolling: "touch" // Smooth scrolling on iOS
         }}

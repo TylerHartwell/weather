@@ -2,9 +2,9 @@
 
 import { useCallback, useState } from "react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { MoreHorizontal } from "lucide-react"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { MoreHorizontal } from "lucide-react"
 import { useWeatherData } from "@/hooks/use-weather-data"
 import type { VisibleTimeRange } from "@/types/weather"
 
@@ -15,7 +15,7 @@ import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
-import TimelineSection from "@/components/weather/timeline-section"
+import WeekdaySection from "@/components/weather/weekday-section"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
@@ -77,23 +77,15 @@ export default function WeatherDashboard() {
   return (
     <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center">
       <Card className="w-full max-w-3xl bg-gray-900 border-gray-800 text-white">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center">
-            <span className="text-sm text-gray-400">Results for</span>
-            <CardTitle className="ml-2 text-base font-medium">{location}</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 p-0">
-              Choose area
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
         <CardContent>
-          <div className="flex flex-col space-y-6">
-            Current Weather
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center justify-between text-lg font-medium">
+              Current Weather
+              <div className="flex items-center">
+                <span className="text-sm text-gray-400 font-normal">Results for</span>
+                <CardTitle className="ml-2 text-base font-medium">{location}</CardTitle>
+              </div>
+            </div>
             <CurrentWeather
               weatherCurrent={weatherData.current}
               toggleTempUnit={toggleTempUnit}
@@ -103,16 +95,16 @@ export default function WeatherDashboard() {
               windSpeedUnit={windSpeedUnit}
               precipitationUnit={precipitationUnit}
             />
-            {/* Chart Section */}
             <ChartSection
               weatherHourly={weatherData.hourly}
               onVisibleRangeChange={handleVisibleRangeChange}
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
               timezone={weatherData.timezone}
+              temperatureUnit={temperatureUnit}
+              windSpeedUnit={windSpeedUnit}
             />
-            Timeline Section
-            <TimelineSection
+            <WeekdaySection
               weatherDaily={weatherData.daily}
               visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}

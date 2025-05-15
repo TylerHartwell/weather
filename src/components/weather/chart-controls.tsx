@@ -1,15 +1,17 @@
 import { Checkbox } from "@/components/ui/checkbox"
-import type { VisibleSeries } from "@/types/weather"
+import type { TemperatureUnit, VisibleSeries, WindSpeedUnit } from "@/types/weather"
 
 interface ChartControlsProps {
   visibleSeries: VisibleSeries
   onToggleSeries: (series: keyof VisibleSeries) => void
+  temperatureUnit: TemperatureUnit
+  windSpeedUnit: WindSpeedUnit
 }
 
-export default function ChartControls({ visibleSeries, onToggleSeries }: ChartControlsProps) {
+export default function ChartControls({ visibleSeries, onToggleSeries, temperatureUnit, windSpeedUnit }: ChartControlsProps) {
   return (
     <div className="flex items-center justify-between mb-2">
-      <h3 className="text-sm font-medium">24-Hour Weather</h3>
+      <h3 className="text-lg font-medium">24-Hour Weather</h3>
       <div className="flex items-center gap-4 text-xs">
         <div className="flex items-center gap-1.5">
           <Checkbox
@@ -20,7 +22,7 @@ export default function ChartControls({ visibleSeries, onToggleSeries }: ChartCo
           />
           <label htmlFor="temperature" className="flex items-center">
             <div className="w-3 h-3 bg-yellow-400 rounded-full mr-1"></div>
-            <span>Temperature (°F)</span>
+            <span>Temperature ({temperatureUnit === "fahrenheit" ? "°F" : "°C"})</span>
           </label>
         </div>
         <div className="flex items-center gap-1.5">
@@ -44,7 +46,7 @@ export default function ChartControls({ visibleSeries, onToggleSeries }: ChartCo
           />
           <label htmlFor="wind" className="flex items-center">
             <div className="w-3 h-3 bg-green-400 rounded-full mr-1"></div>
-            <span>Wind (mph)</span>
+            <span>Wind ({windSpeedUnit === "mph" ? "mph" : "kmh"})</span>
           </label>
         </div>
       </div>

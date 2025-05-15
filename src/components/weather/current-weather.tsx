@@ -27,7 +27,7 @@ export default function CurrentWeather({
         <WeatherIcon type={"sunny"} size="lg" />
         <div className="text-6xl font-semibold ml-2" onClick={toggleTempUnit}>
           {Math.round(weatherCurrent.temperature2m)}
-          <span className="text-2xl">{temperatureUnit === "fahrenheit" ? "F" : "C"}</span>
+          <span className="text-2xl">{temperatureUnit === "fahrenheit" ? "°F" : "°C"}</span>
         </div>
         <div className="flex flex-col ml-2 text-gray-400">
           <span onClick={togglePrecipitationUnit}>
@@ -40,9 +40,9 @@ export default function CurrentWeather({
         </div>
       </div>
       <div className="text-right">
-        <div className="text-2xl">Weather</div>
-        <div className="text-lg">{weatherCurrent.time.weekdayShort}</div>
-        <div className="text-lg">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
+        <div className="text-lg font-semibold capitalize">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
+        <div className="text-lg">{weatherCurrent.time.weekdayLong}</div>
+        <div className="text-md">{weatherCurrent.time.toFormat("yyyy-MM-dd")}</div>
       </div>
     </div>
   )

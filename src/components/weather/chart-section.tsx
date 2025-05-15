@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import type { VisibleSeries, WeatherHourly } from "@/types/weather"
+import type { TemperatureUnit, VisibleSeries, WeatherHourly, WindSpeedUnit } from "@/types/weather"
 import WeatherChart from "./weather-chart"
 import ChartControls from "./chart-controls"
 
@@ -11,6 +11,8 @@ interface ChartSectionProps {
   scrollToTimestamp?: number | null
   centerOnCurrent?: boolean
   timezone: string | null
+  temperatureUnit: TemperatureUnit
+  windSpeedUnit: WindSpeedUnit
 }
 
 export default function ChartSection({
@@ -18,7 +20,9 @@ export default function ChartSection({
   onVisibleRangeChange,
   scrollToTimestamp,
   centerOnCurrent = false,
-  timezone
+  timezone,
+  temperatureUnit,
+  windSpeedUnit
 }: ChartSectionProps) {
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
     temperature: true,
@@ -35,8 +39,13 @@ export default function ChartSection({
   }
 
   return (
-    <div className="pt-4">
-      <ChartControls visibleSeries={visibleSeries} onToggleSeries={handleSeriesToggle} />
+    <div>
+      <ChartControls
+        visibleSeries={visibleSeries}
+        onToggleSeries={handleSeriesToggle}
+        temperatureUnit={temperatureUnit}
+        windSpeedUnit={windSpeedUnit}
+      />
       <WeatherChart
         weatherHourly={weatherHourly}
         onVisibleRangeChange={onVisibleRangeChange}
