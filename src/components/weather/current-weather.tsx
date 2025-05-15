@@ -1,6 +1,6 @@
 import type { PrecipitationUnit, TemperatureUnit, WeatherCurrent, WindSpeedUnit } from "@/types/weather"
 import WeatherIcon from "./weather-icon"
-import { getDayName, getWeatherDescription } from "@/lib/weather-utils"
+import { getWeatherDescription } from "@/lib/weather-utils"
 
 interface CurrentWeatherProps {
   weatherCurrent: WeatherCurrent
@@ -41,7 +41,7 @@ export default function CurrentWeather({
       </div>
       <div className="text-right">
         <div className="text-2xl">Weather</div>
-        <div className="text-lg">{getDayName(weatherCurrent.time.getTime())}</div>
+        <div className="text-lg">{weatherCurrent.time.weekdayShort}</div>
         <div className="text-lg">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
       </div>
     </div>

@@ -1,34 +1,3 @@
-import { DateTime } from "luxon"
-
-export const getTimeDifferenceFromOffset = (utcOffsetSeconds: number): number => {
-  const localOffsetMinutes = -new Date().getTimezoneOffset() // in minutes
-  const localOffsetSeconds = localOffsetMinutes * 60
-
-  const diffInSeconds = utcOffsetSeconds - localOffsetSeconds
-  return diffInSeconds / 3600 // convert to hours
-}
-
-export const isSameHour = (dt1: DateTime, dt2: DateTime): boolean => {
-  return dt1.toUTC().hasSame(dt2.toUTC(), "hour")
-}
-
-// Helper to get date string in YYYY-MM-DD format
-export const getDateString = (date: Date): string => {
-  return date.toISOString().split("T")[0]
-}
-
-// Format date for display
-export const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp)
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
-}
-
-// Get day name from timestamp
-export const getDayName = (timestamp: number, short = true): string => {
-  const date = new Date(timestamp)
-  return date.toLocaleDateString("en-US", { weekday: short ? "short" : "long" })
-}
-
 export const getWeatherDescription = (code: number): string => {
   const weatherMap: { [key: number]: string } = {
     0: "Clear",

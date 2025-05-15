@@ -106,7 +106,6 @@ export default function WeatherDashboard() {
             {/* Chart Section */}
             <ChartSection
               weatherHourly={weatherData.hourly}
-              hourDiffFromLocal={weatherData.hourDiffFromLocal}
               onVisibleRangeChange={handleVisibleRangeChange}
               scrollToTimestamp={selectedTimestamp}
               centerOnCurrent={!selectedTimestamp}
@@ -115,7 +114,6 @@ export default function WeatherDashboard() {
             Timeline Section
             <TimelineSection
               weatherDaily={weatherData.daily}
-              hourDiffFromLocal={weatherData.hourDiffFromLocal}
               visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}

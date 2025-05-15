@@ -1,6 +1,6 @@
 import { fetchWeatherApi } from "openmeteo"
 import type { PrecipitationUnit, TemperatureUnit, WeatherData, WindSpeedUnit } from "@/types/weather"
-import { getTimeDifferenceFromOffset } from "@/lib/weather-utils"
+import { DateTime } from "luxon"
 
 // Geocoding API to convert location name to coordinates
 async function getCoordinates(location: string) {
@@ -65,8 +65,7 @@ export async function fetchWeatherData(
 
     const response = responses[0]
 
-    const utcOffsetSeconds = response.utcOffsetSeconds()
-    const hourDiffFromLocal = Number(getTimeDifferenceFromOffset(utcOffsetSeconds).toFixed())
+    // const utcOffsetSeconds = response.utcOffsetSeconds()
     const timezone = response.timezone()
     const timezoneAbbreviation = response.timezoneAbbreviation()
     const latitude = response.latitude()
@@ -78,7 +77,7 @@ export async function fetchWeatherData(
 
     const weatherData = {
       current: {
-        time: new Date(Number(current.time()) * 1000),
+        time: DateTime.fromSeconds(Number(current.time())).setZone(timezone || "local"),
         temperature2m: current.variables(0)!.value(),
         relativeHumidity2m: current.variables(1)!.value(),
         windSpeed10m: current.variables(2)!.value(),
@@ -87,16 +86,16 @@ export async function fetchWeatherData(
         weatherCode: current.variables(5)!.value()
       },
       hourly: {
-        time: [...Array((Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval())].map(
-          (_, i) => new Date((Number(hourly.time()) + i * hourly.interval()) * 1000)
+        time: [...Array((Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval())].map((_, i) =>
+          DateTime.fromSeconds(Number(hourly.time()) + i * hourly.interval()).setZone(timezone || "local")
         ),
         temperature2m: hourly.variables(0)!.valuesArray()!,
         windSpeed10m: hourly.variables(1)!.valuesArray()!,
         precipitationProbability: hourly.variables(2)!.valuesArray()!
       },
       daily: {
-        time: [...Array((Number(daily.timeEnd()) - Number(daily.time())) / daily.interval())].map(
-          (_, i) => new Date((Number(daily.time()) + i * daily.interval()) * 1000)
+        time: [...Array((Number(daily.timeEnd()) - Number(daily.time())) / daily.interval())].map((_, i) =>
+          DateTime.fromSeconds(Number(daily.time()) + i * daily.interval()).setZone(timezone || "local")
         ),
         temperature2mMax: daily.variables(0)!.valuesArray()!,
         temperature2mMin: daily.variables(1)!.valuesArray()!,
@@ -111,11 +110,8 @@ export async function fetchWeatherData(
       longitude,
       windSpeedUnit,
       temperatureUnit,
-      precipitationUnit,
-      hourDiffFromLocal
+      precipitationUnit
     }
-
-    // console.log(weatherData.current.time, weatherData.timezone, -weatherData.current.time.getTimezoneOffset(), utcOffsetSeconds / 60)
 
     return weatherData
   } catch (error) {

@@ -7,23 +7,15 @@ import WeatherIcon from "./weather-icon"
 import { getWeatherDescription } from "@/lib/weather-utils"
 import { DateTime } from "luxon"
 
-interface CombinedWeatherTimelineProps {
+interface WeekdayCardsProps {
   weatherDaily: WeatherDaily
   visibleTimeRange?: VisibleTimeRange | null
   onDayClick?: (timestamp: number) => void
   selectedTimestamp?: number | null
-  hourDiffFromLocal: number
   timezone: string | null
 }
 
-export default function CombinedWeatherTimeline({
-  weatherDaily,
-  visibleTimeRange,
-  onDayClick,
-  selectedTimestamp,
-  hourDiffFromLocal,
-  timezone
-}: CombinedWeatherTimelineProps) {
+export default function WeekdayCards({ weatherDaily, visibleTimeRange, onDayClick, selectedTimestamp, timezone }: WeekdayCardsProps) {
   const numDays = weatherDaily.time.length
   const [allDays, setAllDays] = useState<WeatherDay[]>([])
   const [bracketPosition, setBracketPosition] = useState<{ left: number; width: number } | null>(null)
@@ -67,8 +59,8 @@ export default function CombinedWeatherTimeline({
     if (!timelineEl) return
 
     const timelineWidth = timelineEl.scrollWidth
-    const timelineStart = allDays[0].time.getTime() || 0
-    const timelineEnd = allDays[allDays.length - 1].time.getTime() || 0
+    const timelineStart = allDays[0].time.toMillis() || 0
+    const timelineEnd = allDays[allDays.length - 1].time.toMillis() || 0
     const timelineRange = timelineEnd - timelineStart
 
     if (timelineRange === 0) return
@@ -94,13 +86,13 @@ export default function CombinedWeatherTimeline({
       // Find the day that contains this timestamp
       const selectedDay = allDays.find(day => {
         if (!day.time) return false
-        const dayStart = day.time.setHours(0, 0, 0, 0)
+        const dayStart = day.time.startOf("day").toMillis()
         const dayEnd = dayStart + 24 * 60 * 60 * 1000
         return selectedTimestamp >= dayStart && selectedTimestamp < dayEnd
       })
 
       if (selectedDay && selectedDay.time) {
-        const dayId = `day-${selectedDay.time}`
+        const dayId = `day-${selectedDay.time.toMillis()}`
         setHighlightedDayId(dayId)
       }
     }
@@ -134,7 +126,7 @@ export default function CombinedWeatherTimeline({
       if (!day.time) return
 
       // Calculate the start and end of this day
-      const dayStart = day.time.setHours(0, 0, 0, 0)
+      const dayStart = day.time.startOf("day").toMillis()
       const dayEnd = dayStart + 24 * 60 * 60 * 1000
 
       // Calculate overlap with visible range
@@ -186,23 +178,18 @@ export default function CombinedWeatherTimeline({
       <div id="weather-timeline" className="flex space-x-2 min-w-max">
         {allDays.map((day, index) => {
           // Create a unique ID for this day using timestamp
-          const dayId = `day-${day.time}`
-          // console.log(DateTime.fromJSDate(day.time).setZone(timezone || "local"))
+          const dayId = `day-${day.time.toMillis()}`
 
           return (
             <Card
               key={`timeline-day-${index}`}
               className={`bg-gray-800 border-gray-700 p-2 flex flex-col items-center min-w-[70px] cursor-pointer hover:bg-gray-700 transition-colors ${
-                DateTime.fromJSDate(day.time)
-                  .setZone(timezone || "local")
-                  .hasSame(today, "day")
-                  ? "border-accent"
-                  : ""
+                day.time.setZone(timezone || "local").hasSame(today, "day") ? "border-accent" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
-              onClick={() => handleDayClick(day.time.getTime() || 0)}
+              onClick={() => handleDayClick(day.time.toMillis() || 0)}
             >
-              <div className="text-sm font-medium">{DateTime.fromJSDate(day.time).toLocaleString({ weekday: "short" })}</div>
-              <div className="text-xs text-gray-400">{DateTime.fromJSDate(day.time).day}</div>
+              <div className="text-sm font-medium">{day.time.toLocaleString({ weekday: "short" })}</div>
+              <div className="text-xs text-gray-400">{day.time.day}</div>
               <div className="my-2">
                 <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
                 {`Code ${day.weatherCode}`}

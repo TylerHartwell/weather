@@ -1,3 +1,5 @@
+import { DateTime } from "luxon"
+
 export interface WeatherData {
   current: WeatherCurrent
   hourly: WeatherHourly
@@ -9,11 +11,10 @@ export interface WeatherData {
   windSpeedUnit: WindSpeedUnit
   temperatureUnit: TemperatureUnit
   precipitationUnit: PrecipitationUnit
-  hourDiffFromLocal: number
 }
 
 export interface WeatherCurrent {
-  time: Date
+  time: DateTime
   temperature2m: number
   relativeHumidity2m: number
   windSpeed10m: number
@@ -23,7 +24,7 @@ export interface WeatherCurrent {
 }
 
 export interface WeatherHourly {
-  time: Date[]
+  time: DateTime[]
   temperature2m: Float32Array
   windSpeed10m: Float32Array
   precipitationProbability: Float32Array
@@ -34,7 +35,7 @@ export type WeatherHour = {
 }
 
 export interface WeatherDaily {
-  time: Date[]
+  time: DateTime[]
   temperature2mMax: Float32Array
   temperature2mMin: Float32Array
   windSpeed10mMax: Float32Array

@@ -10,7 +10,6 @@ interface ChartSectionProps {
   onVisibleRangeChange: (start: number, end: number) => void
   scrollToTimestamp?: number | null
   centerOnCurrent?: boolean
-  hourDiffFromLocal: number
   timezone: string | null
 }
 
@@ -19,7 +18,6 @@ export default function ChartSection({
   onVisibleRangeChange,
   scrollToTimestamp,
   centerOnCurrent = false,
-  hourDiffFromLocal,
   timezone
 }: ChartSectionProps) {
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
@@ -46,7 +44,6 @@ export default function ChartSection({
         centerOnCurrent={centerOnCurrent}
         containerRef={chartContainerRef}
         visibleSeries={visibleSeries}
-        hourDiffFromLocal={hourDiffFromLocal}
         timezone={timezone}
       />
     </div>
