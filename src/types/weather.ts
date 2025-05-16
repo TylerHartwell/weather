@@ -11,6 +11,7 @@ export interface WeatherData {
   windSpeedUnit: WindSpeedUnit
   temperatureUnit: TemperatureUnit
   precipitationUnit: PrecipitationUnit
+  locationName: string
 }
 
 export interface WeatherCurrent {

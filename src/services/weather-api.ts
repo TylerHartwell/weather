@@ -26,7 +26,13 @@ async function getCoordinates(location: string) {
     }
   } catch (error) {
     console.error("Error getting coordinates:", error)
-    throw error
+    return {
+      country: "United States",
+      latitude: 40.71427,
+      longitude: -74.00597,
+      name: "New York",
+      timezone: "America/New_York"
+    }
   }
 }
 
@@ -53,8 +59,8 @@ export async function fetchWeatherData(
       "hourly": ["temperature_2m", "wind_speed_10m", "precipitation_probability"],
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "timezone": locationData.timezone,
-      "past_days": 1,
-      "forecast_days": 7,
+      "past_days": 7,
+      "forecast_days": 8,
       "wind_speed_unit": windSpeedUnit,
       "temperature_unit": temperatureUnit,
       "precipitation_unit": precipitationUnit
@@ -110,7 +116,8 @@ export async function fetchWeatherData(
       longitude,
       windSpeedUnit,
       temperatureUnit,
-      precipitationUnit
+      precipitationUnit,
+      locationName: locationData.name
     }
 
     return weatherData

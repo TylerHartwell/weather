@@ -14,7 +14,7 @@ interface TimelineSectionProps {
 export default function WeekdaySection({ weatherDaily, visibleTimeRange, onDayClick, selectedTimestamp, timezone }: TimelineSectionProps) {
   return (
     <div>
-      <h3 className="text-lg font-medium">Weekday Summary</h3>
+      <h3 className="text-lg font-medium mb-2">Weekday Summary</h3>
       <div className="relative">
         <div className="overflow-x-auto pb-4">
           <WeekdayCards

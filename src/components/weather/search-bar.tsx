@@ -22,13 +22,14 @@ export default function SearchBar({ onSearch, initialQuery = "" }: SearchBarProp
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4">
-      <div className="flex gap-2">
+    <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+      <div>Search Location:</div>
+      <div className="flex gap-2 grow">
         <Input
           type="text"
           placeholder="Search for a location..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="bg-gray-800 border-gray-700"
         />
         <Button type="submit" className="bg-blue-600 hover:bg-blue-700">

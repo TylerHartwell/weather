@@ -468,6 +468,7 @@ export default function WeatherChart({
 
       // Find the exact day start for the selected timestamp
       const selectedDate = DateTime.fromMillis(scrollToTimestamp).startOf("day")
+
       const dayStart = selectedDate.toMillis()
 
       // Calculate the middle of the day (noon) for better centering
@@ -482,6 +483,8 @@ export default function WeatherChart({
       // Center the view on the selected day
       const containerWidth = containerRef.current.clientWidth
       const targetScrollPosition = Math.max(0, pixelOffset - containerWidth / 2)
+
+      console.log({ dayStart, startTimestamp, timePerPixel, pixelOffset, containerWidth, targetScrollPosition })
 
       // Set flag to indicate we're auto-scrolling
       isAutoScrollingRef.current = true

@@ -2,9 +2,7 @@
 
 import { useCallback, useState } from "react"
 
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
-// import { Button } from "@/components/ui/button"
-// import { MoreHorizontal } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { useWeatherData } from "@/hooks/use-weather-data"
 import type { VisibleTimeRange } from "@/types/weather"
 
@@ -76,16 +74,9 @@ export default function WeatherDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center">
-      <Card className="w-full max-w-3xl bg-gray-900 border-gray-800 text-white">
+      <Card className="w-full max-w-3xl bg-gray-900 border-gray-800 text-white py-2">
         <CardContent>
           <div className="flex flex-col space-y-2">
-            <div className="flex items-center justify-between text-lg font-medium">
-              Current Weather
-              <div className="flex items-center">
-                <span className="text-sm text-gray-400 font-normal">Results for</span>
-                <CardTitle className="ml-2 text-base font-medium">{location}</CardTitle>
-              </div>
-            </div>
             <CurrentWeather
               weatherCurrent={weatherData.current}
               toggleTempUnit={toggleTempUnit}
@@ -94,6 +85,7 @@ export default function WeatherDashboard() {
               temperatureUnit={temperatureUnit}
               windSpeedUnit={windSpeedUnit}
               precipitationUnit={precipitationUnit}
+              locationName={weatherData.locationName}
             />
             <ChartSection
               weatherHourly={weatherData.hourly}
@@ -111,7 +103,6 @@ export default function WeatherDashboard() {
               selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
             />
-            Search
             <SearchBar onSearch={handleSearch} initialQuery={location} />
           </div>
         </CardContent>
