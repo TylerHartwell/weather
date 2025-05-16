@@ -183,18 +183,25 @@ export default function WeekdayCards({ weatherDaily, visibleTimeRange, onDayClic
           return (
             <Card
               key={`timeline-day-${index}`}
-              className={`bg-gray-800 border-gray-700 p-2 flex flex-col items-center min-w-[70px] cursor-pointer hover:bg-gray-700 transition-colors ${
+              className={`bg-gray-800 border-gray-700 text-white flex flex-col items-center min-w-[90px] cursor-pointer hover:bg-gray-700 transition-colors ${
                 day.time.setZone(timezone || "local").hasSame(today, "day") ? "border-accent" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
               onClick={() => handleDayClick(day.time.toMillis() || 0)}
             >
               <div className="text-sm font-medium">{day.time.toLocaleString({ weekday: "short" })}</div>
-              <div className="text-xs text-gray-400">{day.time.day}</div>
-              <div className="my-2">
+              <div className="text-xs text-gray-400 mb-1">{day.time.day}</div>
+              <div className="grow">
                 <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
-                {`Code ${day.weatherCode}`}
+                <div className="text-wrap text-sm w-min capitalize text-gray-400">{getWeatherDescription(day.weatherCode)}</div>
               </div>
-              <div className="text-sm">
+              <div className="text-sm text-blue-400">{Math.round(day.precipitationProbabilityMax)}%</div>
+              <div className="text-sm flex gap-1 text-green-400">
+                {Math.round(day.windSpeed10mMax)}
+                <span className="inline-block" style={{ transform: `rotate(${Math.round(day.windDirection10mDominant)}deg)` }}>
+                  ↑
+                </span>
+              </div>
+              <div className="text-sm text-yellow-400">
                 {Math.round(day.temperature2mMax)}° {Math.round(day.temperature2mMin)}°
               </div>
             </Card>
