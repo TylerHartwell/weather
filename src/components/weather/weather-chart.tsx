@@ -45,6 +45,7 @@ export default function WeatherChart({
         time: weatherHourly.time[i],
         temperature2m: Math.round(weatherHourly.temperature2m[i]),
         windSpeed10m: Math.round(weatherHourly.windSpeed10m[i]),
+        windDirection10m: Math.round(weatherHourly.windDirection10m[i]),
         precipitationProbability: weatherHourly.precipitationProbability[i]
       })
     }
@@ -299,8 +300,32 @@ export default function WeatherChart({
       allHours.forEach((point, index) => {
         if (index % 2 === 0) {
           const x = padding + (index / (allHours.length - 1)) * chartWidth
-          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight - 15
-          ctx.fillText(`${point.windSpeed10m}`, x, y)
+          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
+          const textOffsetX = 0
+          const textOffsetY = -15
+          ctx.fillText(`${point.windSpeed10m}`, x + textOffsetX, y + textOffsetY)
+          ctx.save()
+          const arrowOffsetX = 0
+          const arrowOffsetY = 0
+          const baseX = x + arrowOffsetX
+          const baseY = y + arrowOffsetY
+
+          ctx.translate(baseX, baseY) // base of the arrow is now (0, 0)
+
+          // Rotate the canvas
+          const angle = (Math.round(point.windDirection10m) * Math.PI) / 180
+          ctx.rotate(angle)
+
+          const scale = Math.sqrt(point.windSpeed10m)
+          ctx.scale(scale, scale)
+
+          // Draw the arrow pointing up ("↑"), which will now be rotated
+          ctx.textAlign = "center"
+          ctx.textBaseline = "bottom"
+          ctx.fillText("↑", 0, 0)
+
+          // Restore context to avoid affecting other drawings
+          ctx.restore()
         }
       })
 

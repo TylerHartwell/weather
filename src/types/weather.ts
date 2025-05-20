@@ -28,6 +28,7 @@ export interface WeatherHourly {
   time: DateTime[]
   temperature2m: Float32Array
   windSpeed10m: Float32Array
+  windDirection10m: Float32Array
   precipitationProbability: Float32Array
 }
 
