@@ -92,11 +92,11 @@ export default function WeekdayCards({ weatherDaily, visibleTimeRange, onDayClic
       })
 
       if (selectedDay && selectedDay.time) {
-        const dayId = `day-${selectedDay.time.toMillis()}`
+        const dayId = `day-${selectedDay.time.setZone(timezone || "local").toMillis()}`
         setHighlightedDayId(dayId)
       }
     }
-  }, [selectedTimestamp, allDays])
+  }, [selectedTimestamp, allDays, timezone])
 
   // Determine which day has the most visible hours
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function WeekdayCards({ weatherDaily, visibleTimeRange, onDayClic
 
     // Only update if we have a clear winner with significant overlap
     if (maxOverlapDayId && maxOverlapHours > 0) {
-      setHighlightedDayId(maxOverlapDayId)
+      // setHighlightedDayId(maxOverlapDayId)
     }
   }, [visibleTimeRange, allDays, selectedTimestamp])
 
@@ -178,7 +178,7 @@ export default function WeekdayCards({ weatherDaily, visibleTimeRange, onDayClic
       <div id="weather-timeline" className="flex space-x-2 min-w-max">
         {allDays.map((day, index) => {
           // Create a unique ID for this day using timestamp
-          const dayId = `day-${day.time.toMillis()}`
+          const dayId = `day-${day.time.setZone(timezone || "local").toMillis()}`
 
           return (
             <Card

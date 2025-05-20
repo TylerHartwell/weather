@@ -484,8 +484,6 @@ export default function WeatherChart({
       const containerWidth = containerRef.current.clientWidth
       const targetScrollPosition = Math.max(0, pixelOffset - containerWidth / 2)
 
-      console.log({ dayStart, startTimestamp, timePerPixel, pixelOffset, containerWidth, targetScrollPosition })
-
       // Set flag to indicate we're auto-scrolling
       isAutoScrollingRef.current = true
 

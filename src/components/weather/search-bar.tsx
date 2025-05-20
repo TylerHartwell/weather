@@ -26,6 +26,7 @@ export default function SearchBar({ onSearch, initialQuery = "" }: SearchBarProp
       <div>Search Location:</div>
       <div className="flex gap-2 grow">
         <Input
+          id="search-location"
           type="text"
           placeholder="Search for a location..."
           value={searchQuery}
