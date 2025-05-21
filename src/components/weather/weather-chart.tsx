@@ -3,7 +3,7 @@
 import type React from "react"
 import { DateTime } from "luxon"
 import { useEffect, useRef, useState, useCallback, useMemo, RefObject } from "react"
-import type { VisibleSeries, WeatherHour, WeatherHourly } from "@/types/weather"
+import type { SeriesKey, VisibleSeries, WeatherHour, WeatherHourly } from "@/types/weather"
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
@@ -11,7 +11,7 @@ interface WeatherChartProps {
   scrollToTimestamp?: number | null
   centerOnCurrent?: boolean
   containerRef?: RefObject<HTMLDivElement | null>
-  visibleSeries?: VisibleSeries
+  visibleSeries: VisibleSeries
   timezone: string | null
 }
 
@@ -20,7 +20,7 @@ export default function WeatherChart({
   onVisibleRangeChange,
   scrollToTimestamp,
   centerOnCurrent = false,
-  visibleSeries = { temperature: true, precipitation: true, wind: true },
+  visibleSeries,
   timezone,
   ...props
 }: WeatherChartProps) {
@@ -35,6 +35,22 @@ export default function WeatherChart({
   const requestAnimationFrameRef = useRef<number | null>(null)
   const isAutoScrollingRef = useRef<boolean>(false)
   const lastScrollToTimestampRef = useRef<number | null>(null)
+
+  const getVisibilityState = useCallback(
+    (seriesKey: SeriesKey) => {
+      // Check if any dataDisplay is in solo mode
+      const anySolo = Object.values(visibleSeries).some(state => state.solo)
+
+      if (anySolo) {
+        // If any dataDisplay is in solo mode, only the solo dataDisplay is visible
+        return visibleSeries[seriesKey].solo
+      }
+
+      // Otherwise, all dataDisplays that aren't hidden are visible
+      return !visibleSeries[seriesKey].hidden
+    },
+    [visibleSeries]
+  )
 
   const allHours = useMemo<WeatherHour[]>(() => {
     const numHours = weatherHourly.time.length
@@ -216,7 +232,7 @@ export default function WeatherChart({
     const maxWind = Math.max(...allHours.map(item => item.windSpeed10m || 0)) + 5
 
     // Draw temperature line if visible
-    if (visibleSeries.temperature) {
+    if (getVisibilityState("temperature")) {
       ctx.beginPath()
       ctx.strokeStyle = "#FACC15" // Yellow for temperature
       ctx.lineWidth = 3
@@ -260,7 +276,7 @@ export default function WeatherChart({
     }
 
     // Draw precipitation line if visible
-    if (visibleSeries.precipitation) {
+    if (getVisibilityState("precipitation")) {
       ctx.beginPath()
       ctx.strokeStyle = "#60A5FA" // Blue for precipitation
       ctx.lineWidth = 2
@@ -279,7 +295,7 @@ export default function WeatherChart({
     }
 
     // Draw wind line if visible
-    if (visibleSeries.wind) {
+    if (getVisibilityState("wind")) {
       ctx.beginPath()
       ctx.strokeStyle = "#4ADE80" // Green for wind
       ctx.lineWidth = 2
@@ -395,7 +411,7 @@ export default function WeatherChart({
       ctx.fillStyle = "#FFFFFF"
       ctx.fill()
     }
-  }, [allHours, currentHourIndex, calculateTimePerPixel, visibleSeries, timezone])
+  }, [allHours, getVisibilityState, currentHourIndex, timezone, calculateTimePerPixel])
 
   // Initial chart drawing
   useEffect(() => {

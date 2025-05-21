@@ -50,11 +50,10 @@ export type WeatherDay = {
   [K in keyof WeatherDaily]: WeatherDaily[K] extends Array<infer U> ? U : WeatherDaily[K] extends Float32Array ? number : never
 }
 
-export interface VisibleSeries {
-  temperature: boolean
-  precipitation: boolean
-  wind: boolean
-}
+export const seriesKeys = ["temperature", "precipitation", "wind"] as const
+export type SeriesKey = (typeof seriesKeys)[number]
+
+export type VisibleSeries = Record<SeriesKey, { hidden: boolean; solo: boolean }>
 
 export interface VisibleTimeRange {
   start: number

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import type { TemperatureUnit, VisibleSeries, WeatherHourly, WindSpeedUnit } from "@/types/weather"
+import { seriesKeys, type SeriesKey, type TemperatureUnit, type VisibleSeries, type WeatherHourly, type WindSpeedUnit } from "@/types/weather"
 import WeatherChart from "./weather-chart"
 import ChartControls from "./chart-controls"
 
@@ -24,11 +24,8 @@ export default function ChartSection({
   temperatureUnit,
   windSpeedUnit
 }: ChartSectionProps) {
-  const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
-    temperature: true,
-    precipitation: true,
-    wind: true
-  })
+  const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: false, solo: false }])) as VisibleSeries
+  const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
   const chartContainerRef = useRef<HTMLDivElement | null>(null)
 
   const handleSeriesToggle = (series: keyof VisibleSeries) => {
@@ -38,10 +35,57 @@ export default function ChartSection({
     }))
   }
 
+  const handleHideToggle = (seriesKey: SeriesKey) => {
+    setVisibleSeries(prev => {
+      const newState = { ...prev }
+      const currentVisibleSeries = { ...newState[seriesKey] }
+
+      if (currentVisibleSeries.hidden) {
+        currentVisibleSeries.hidden = false
+      } else {
+        currentVisibleSeries.hidden = true
+        seriesKeys.forEach(key => {
+          newState[key] = { ...newState[key], solo: false }
+        })
+      }
+
+      newState[seriesKey] = currentVisibleSeries
+      return newState
+    })
+  }
+
+  const handleSoloToggle = (seriesKey: SeriesKey) => {
+    setVisibleSeries(prev => {
+      const isCurrentlySolo = prev[seriesKey].solo
+
+      const newState: VisibleSeries = {} as VisibleSeries
+
+      if (isCurrentlySolo) {
+        seriesKeys.forEach(key => {
+          newState[key] = {
+            ...prev[key],
+            solo: false
+          }
+        })
+      } else {
+        seriesKeys.forEach(key => {
+          newState[key] = {
+            hidden: false,
+            solo: key === seriesKey
+          }
+        })
+      }
+
+      return newState
+    })
+  }
+
   return (
     <div>
       <ChartControls
         visibleSeries={visibleSeries}
+        onHideToggle={handleHideToggle}
+        onSoloToggle={handleSoloToggle}
         onToggleSeries={handleSeriesToggle}
         temperatureUnit={temperatureUnit}
         windSpeedUnit={windSpeedUnit}
