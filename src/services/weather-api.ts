@@ -68,6 +68,7 @@ export async function fetchWeatherData(
     const url = "https://api.open-meteo.com/v1/forecast"
 
     const responses = await fetchWeatherApi(url, params)
+    console.log("API CALLED")
 
     const response = responses[0]
 

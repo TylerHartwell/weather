@@ -28,28 +28,27 @@ export default function ChartSection({
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
   const chartContainerRef = useRef<HTMLDivElement | null>(null)
 
-  const handleSeriesToggle = (series: keyof VisibleSeries) => {
-    setVisibleSeries(prev => ({
-      ...prev,
-      [series]: !prev[series]
-    }))
-  }
-
   const handleHideToggle = (seriesKey: SeriesKey) => {
     setVisibleSeries(prev => {
-      const newState = { ...prev }
-      const currentVisibleSeries = { ...newState[seriesKey] }
+      const isCurrentlySolo = prev[seriesKey].solo
 
-      if (currentVisibleSeries.hidden) {
-        currentVisibleSeries.hidden = false
-      } else {
-        currentVisibleSeries.hidden = true
+      const newState: VisibleSeries = {} as VisibleSeries
+
+      if (isCurrentlySolo) {
         seriesKeys.forEach(key => {
-          newState[key] = { ...newState[key], solo: false }
+          newState[key] = {
+            hidden: key === seriesKey,
+            solo: false
+          }
+        })
+      } else {
+        seriesKeys.forEach(key => {
+          newState[key] = {
+            hidden: key === seriesKey ? !prev[key].hidden : prev[key].hidden,
+            solo: false
+          }
         })
       }
-
-      newState[seriesKey] = currentVisibleSeries
       return newState
     })
   }
@@ -86,7 +85,6 @@ export default function ChartSection({
         visibleSeries={visibleSeries}
         onHideToggle={handleHideToggle}
         onSoloToggle={handleSoloToggle}
-        onToggleSeries={handleSeriesToggle}
         temperatureUnit={temperatureUnit}
         windSpeedUnit={windSpeedUnit}
       />

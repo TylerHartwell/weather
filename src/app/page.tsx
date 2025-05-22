@@ -48,28 +48,20 @@ export default function WeatherDashboard() {
     setPrecipitationUnit(prev => (prev === "inch" ? "mm" : "inch"))
   }
 
-  const handleRetry = useCallback(() => {
-    resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  }, [resetWeatherData, location, precipitationUnit, temperatureUnit, windSpeedUnit])
-
-  const handleSearch = useCallback(
-    (query: string) => {
-      setLocation(query)
-      handleRetry()
-    },
-    [handleRetry]
-  )
+  const handleSearch = useCallback((query: string) => {
+    setLocation(query)
+  }, [])
 
   if (isLoading) {
     return <LoadingState />
   }
 
   if (error) {
-    return <ErrorState message={error.message} onRetry={handleRetry} />
+    return <ErrorState message={error.message} onRetry={() => resetWeatherData} />
   }
 
   if (!weatherData) {
-    return <ErrorState message="No weather data available" onRetry={handleRetry} />
+    return <ErrorState message="No weather data available" onRetry={() => resetWeatherData} />
   }
 
   return (

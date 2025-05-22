@@ -49,17 +49,18 @@ export default function WeekdaySection({ weatherDaily, visibleTimeRange, onDayCl
 
         setAtStart(isAtStart)
         setAtEnd(isAtEnd)
-        console.log("edge changed")
       }
     }
 
     requestAnimationFrame(() => {
-      el.scrollTo({
-        left: (el.scrollWidth / 15) * 6, //15 is total number of days, 6 is one less than number of history days
-        behavior: "instant"
-      })
-      handleScrollEdgeCheck()
-      console.log("frame")
+      setTimeout(() => {
+        console.log("anim", el.scrollWidth)
+        el.scrollTo({
+          left: (el.scrollWidth / 15) * 6,
+          behavior: "instant"
+        })
+        handleScrollEdgeCheck()
+      }, 0)
     })
 
     handleScrollEdgeCheck()
