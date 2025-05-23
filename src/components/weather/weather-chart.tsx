@@ -17,7 +17,6 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [initialScrollDone, setInitialScrollDone] = useState(false)
-  const lastScrollToTimestampRef = useRef<number | null>(null)
 
   const getVisibilityState = useCallback(
     (seriesKey: SeriesKey) => {
@@ -63,39 +62,17 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   const calculateTimePerPixel = useCallback(() => {
     if (allHours.length < 2 || !canvasRef.current) return 0
 
-    const totalTimespan = allHours[allHours.length - 1].time.toMillis() - allHours[0].time.toMillis()
-    const chartWidth = canvasRef.current.width - 80 // 80 is padding * 2
+    const start = allHours[0].time.toMillis()
+    const end = allHours[allHours.length - 1].time.toMillis()
+    const totalTimespan = end - start
+
+    if (totalTimespan <= 0) return 0
+
+    const chartWidth = canvasRef.current.width - 80
+    if (chartWidth <= 0) return 0
 
     return totalTimespan / chartWidth
   }, [allHours])
-
-  // const calculateVisibleTimeRange = useCallback(() => {
-  //   if (!containerRef.current || !canvasRef.current || allHours.length === 0) return null
-
-  //   const containerWidth = containerRef.current.clientWidth
-  //   const scrollLeft = containerRef.current.scrollLeft
-  //   const timePerPixel = calculateTimePerPixel()
-
-  //   if (timePerPixel === 0) return null
-
-  //   // Calculate the exact start and end times based on scroll position
-  //   const baseTime = allHours[0].time
-  //   const startTimeMillis = baseTime.toMillis() + scrollLeft * timePerPixel
-  //   const endTimeMillis = startTimeMillis + containerWidth * timePerPixel
-
-  //   // Round to the nearest minute to avoid floating point issues
-  //   const roundToMinute = (millis: number): number => {
-  //     const dt = DateTime.fromMillis(millis)
-  //     return dt.set({ second: 0, millisecond: 0 }).toMillis()
-  //   }
-
-  //   console.log((endTimeMillis - startTimeMillis) / 1000 / 60 / 60)
-
-  //   return {
-  //     start: roundToMinute(startTimeMillis),
-  //     end: roundToMinute(endTimeMillis)
-  //   }
-  // }, [allHours, calculateTimePerPixel])
 
   const drawChart = useCallback(() => {
     if (!canvasRef.current) return
@@ -399,43 +376,43 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
   // Handle scrolling to a specific timestamp with smooth animation
   useEffect(() => {
-    if (
-      selectedTimestamp &&
-      containerRef.current &&
-      canvasRef.current &&
-      allHours.length > 0 &&
-      selectedTimestamp !== lastScrollToTimestampRef.current
-    ) {
-      // Update the last scrolled timestamp
-      lastScrollToTimestampRef.current = selectedTimestamp
-
-      // Find the exact day start for the selected timestamp
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (selectedTimestamp && container && canvas && allHours.length > 0) {
       const selectedDate = DateTime.fromMillis(selectedTimestamp).startOf("day")
 
       const dayStart = selectedDate.toMillis()
 
-      // Calculate the middle of the day (noon) for better centering
       const dayMiddle = dayStart + 12 * 60 * 60 * 1000
 
-      const timePerPixel = calculateTimePerPixel()
-      if (timePerPixel === 0) return
-
-      console.log({ timePerPixel })
-
       const startTimestamp = allHours[0].time.toMillis()
-      const pixelOffset = (dayMiddle - startTimestamp) / timePerPixel
+      const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+      const totalTimespan = endTimestamp - startTimestamp
+      const padding = 40
+      const chartWidth = canvas.getBoundingClientRect().width - padding * 2
+      const pixelOffset = padding + ((dayMiddle - startTimestamp) / totalTimespan) * chartWidth
 
-      // Center the view on the selected day
-      const containerWidth = containerRef.current.clientWidth
-      const targetScrollPosition = Math.max(0, pixelOffset - containerWidth / 2)
+      const containerWidth = container.clientWidth
+      const maxScrollLeft = container.scrollWidth - containerWidth
+      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, pixelOffset - containerWidth / 2))
+
+      console.log({
+        selectedDate: selectedDate.toFormat("yyyy-MM-dd HH"),
+        dayStart: DateTime.fromMillis(dayStart).toFormat("yyyy-MM-dd HH"),
+        dayMiddle: DateTime.fromMillis(dayMiddle).toFormat("yyyy-MM-dd HH"),
+        startTimestamp: DateTime.fromMillis(startTimestamp).toFormat("yyyy-MM-dd HH"),
+        pixelOffset,
+        containerWidth,
+        targetScrollPosition
+      })
 
       // Use smooth scrolling
-      containerRef.current.scrollTo({
+      container.scrollTo({
         left: targetScrollPosition,
         behavior: "smooth"
       })
     }
-  }, [selectedTimestamp, allHours, calculateTimePerPixel])
+  }, [selectedTimestamp, allHours])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
@@ -449,9 +426,9 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
       const containerWidth = container.clientWidth
       const maxScrollLeft = container.scrollWidth - containerWidth
-      const scrollTo = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
+      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
 
-      container.scrollLeft = scrollTo
+      container.scrollLeft = targetScrollPosition
       setInitialScrollDone(true)
     }
   }, [currentHourIndex, allHours, initialScrollDone])
