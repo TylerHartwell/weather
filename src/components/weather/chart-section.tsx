@@ -7,23 +7,13 @@ import ChartControls from "./chart-controls"
 
 interface ChartSectionProps {
   weatherHourly: WeatherHourly
-  onVisibleRangeChange: (start: number, end: number) => void
-  scrollToTimestamp?: number | null
-  centerOnCurrent?: boolean
+  selectedTimestamp?: number | null
   timezone: string | null
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
 }
 
-export default function ChartSection({
-  weatherHourly,
-  onVisibleRangeChange,
-  scrollToTimestamp,
-  centerOnCurrent = false,
-  timezone,
-  temperatureUnit,
-  windSpeedUnit
-}: ChartSectionProps) {
+export default function ChartSection({ weatherHourly, selectedTimestamp, timezone, temperatureUnit, windSpeedUnit }: ChartSectionProps) {
   const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: false, solo: false }])) as VisibleSeries
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
   const chartContainerRef = useRef<HTMLDivElement | null>(null)
@@ -90,9 +80,7 @@ export default function ChartSection({
       />
       <WeatherChart
         weatherHourly={weatherHourly}
-        onVisibleRangeChange={onVisibleRangeChange}
-        scrollToTimestamp={scrollToTimestamp}
-        centerOnCurrent={centerOnCurrent}
+        selectedTimestamp={selectedTimestamp}
         containerRef={chartContainerRef}
         visibleSeries={visibleSeries}
         timezone={timezone}

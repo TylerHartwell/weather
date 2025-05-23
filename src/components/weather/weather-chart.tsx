@@ -7,38 +7,20 @@ import type { SeriesKey, VisibleSeries, WeatherHour, WeatherHourly } from "@/typ
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
-  onVisibleRangeChange?: (start: number, end: number) => void
-  scrollToTimestamp?: number | null
-  centerOnCurrent?: boolean
+  selectedTimestamp?: number | null
   containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries: VisibleSeries
   timezone: string | null
 }
 
-export default function WeatherChart({
-  weatherHourly,
-  onVisibleRangeChange,
-  scrollToTimestamp,
-  centerOnCurrent = false,
-  visibleSeries,
-  timezone,
-  ...props
-}: WeatherChartProps) {
+export default function WeatherChart({ weatherHourly, selectedTimestamp, visibleSeries, timezone, ...props }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  // const [scrollPosition, setScrollPosition] = useState(0)
-  const [visibleTimeRange, setVisibleTimeRange] = useState<{ start: number; end: number } | null>(null)
   const [initialScrollDone, setInitialScrollDone] = useState(false)
-  // const [isScrolling, setIsScrolling] = useState(false)
-  const scrollEndTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const lastScrollUpdateRef = useRef<number>(0)
-  const requestAnimationFrameRef = useRef<number | null>(null)
-  const isAutoScrollingRef = useRef<boolean>(false)
   const lastScrollToTimestampRef = useRef<number | null>(null)
 
   const getVisibilityState = useCallback(
     (seriesKey: SeriesKey) => {
-      // Check if any dataDisplay is in solo mode
       const anySolo = Object.values(visibleSeries).some(state => state.solo)
 
       if (anySolo) {
@@ -76,10 +58,8 @@ export default function WeatherChart({
     }
   }, [props, props.containerRef])
 
-  // Find the current time index
   const currentHourIndex = allHours.findIndex(hour => hour.time.toUTC().hasSame(DateTime.now().toUTC(), "hour"))
 
-  // Memoize the calculateTimePerPixel function
   const calculateTimePerPixel = useCallback(() => {
     if (allHours.length < 2 || !canvasRef.current) return 0
 
@@ -89,34 +69,34 @@ export default function WeatherChart({
     return totalTimespan / chartWidth
   }, [allHours])
 
-  // Memoize the calculateVisibleTimeRange function to prevent recreation on each render
-  const calculateVisibleTimeRange = useCallback(() => {
-    if (!containerRef.current || !canvasRef.current || allHours.length === 0) return null
+  // const calculateVisibleTimeRange = useCallback(() => {
+  //   if (!containerRef.current || !canvasRef.current || allHours.length === 0) return null
 
-    const containerWidth = containerRef.current.clientWidth
-    const scrollLeft = containerRef.current.scrollLeft
-    const timePerPixel = calculateTimePerPixel()
+  //   const containerWidth = containerRef.current.clientWidth
+  //   const scrollLeft = containerRef.current.scrollLeft
+  //   const timePerPixel = calculateTimePerPixel()
 
-    if (timePerPixel === 0) return null
+  //   if (timePerPixel === 0) return null
 
-    // Calculate the exact start and end times based on scroll position
-    const baseTime = allHours[0].time
-    const startTimeMillis = baseTime.toMillis() + scrollLeft * timePerPixel
-    const endTimeMillis = startTimeMillis + containerWidth * timePerPixel
+  //   // Calculate the exact start and end times based on scroll position
+  //   const baseTime = allHours[0].time
+  //   const startTimeMillis = baseTime.toMillis() + scrollLeft * timePerPixel
+  //   const endTimeMillis = startTimeMillis + containerWidth * timePerPixel
 
-    // Round to the nearest minute to avoid floating point issues
-    const roundToMinute = (millis: number): number => {
-      const dt = DateTime.fromMillis(millis)
-      return dt.set({ second: 0, millisecond: 0 }).toMillis()
-    }
+  //   // Round to the nearest minute to avoid floating point issues
+  //   const roundToMinute = (millis: number): number => {
+  //     const dt = DateTime.fromMillis(millis)
+  //     return dt.set({ second: 0, millisecond: 0 }).toMillis()
+  //   }
 
-    return {
-      start: roundToMinute(startTimeMillis),
-      end: roundToMinute(endTimeMillis)
-    }
-  }, [allHours, calculateTimePerPixel])
+  //   console.log((endTimeMillis - startTimeMillis) / 1000 / 60 / 60)
 
-  // Draw the chart
+  //   return {
+  //     start: roundToMinute(startTimeMillis),
+  //     end: roundToMinute(endTimeMillis)
+  //   }
+  // }, [allHours, calculateTimePerPixel])
+
   const drawChart = useCallback(() => {
     if (!canvasRef.current) return
 
@@ -413,102 +393,24 @@ export default function WeatherChart({
     }
   }, [allHours, getVisibilityState, currentHourIndex, timezone, calculateTimePerPixel])
 
-  // Initial chart drawing
   useEffect(() => {
     drawChart()
   }, [drawChart])
 
-  // Handle scrolling and update visible range with throttling
-  useEffect(() => {
-    const container = containerRef.current
-    const rafId = requestAnimationFrameRef.current
-
-    const handleScrollEvent = () => {
-      if (!container) return
-
-      // If this is an auto-scroll, don't process it as a manual scroll
-      if (isAutoScrollingRef.current) return
-
-      // Set scrolling state
-      // setIsScrolling(true)
-
-      // Clear any existing scroll end timer
-      if (scrollEndTimerRef.current) {
-        clearTimeout(scrollEndTimerRef.current)
-      }
-
-      // Set a timer to detect when scrolling stops
-      scrollEndTimerRef.current = setTimeout(() => {
-        // setIsScrolling(false)
-
-        // Update the visible range when scrolling stops
-        const range = calculateVisibleTimeRange()
-        if (range && onVisibleRangeChange) {
-          setVisibleTimeRange(range)
-          onVisibleRangeChange(range.start, range.end)
-        }
-      }, 150)
-
-      // Throttle scroll position updates to improve performance
-      const now = DateTime.now().toMillis()
-      if (now - lastScrollUpdateRef.current > 16) {
-        // ~60fps
-        lastScrollUpdateRef.current = now
-        // setScrollPosition(container.scrollLeft)
-
-        // Update visible range during scrolling for more responsive UI
-        if (now - lastScrollUpdateRef.current > 100) {
-          // Only update every 100ms during active scrolling
-          const range = calculateVisibleTimeRange()
-          if (range && onVisibleRangeChange) {
-            setVisibleTimeRange(range)
-            onVisibleRangeChange(range.start, range.end)
-          }
-        }
-      }
-    }
-
-    if (container) {
-      // Use passive event listener for better performance
-      container.addEventListener("scroll", handleScrollEvent, { passive: true })
-
-      // Initial calculation - but only if we don't already have a range
-      if (!visibleTimeRange) {
-        const range = calculateVisibleTimeRange()
-        if (range && onVisibleRangeChange) {
-          setVisibleTimeRange(range)
-          onVisibleRangeChange(range.start, range.end)
-        }
-      }
-    }
-
-    return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScrollEvent)
-      }
-      if (scrollEndTimerRef.current) {
-        clearTimeout(scrollEndTimerRef.current)
-      }
-      if (rafId) {
-        cancelAnimationFrame(rafId)
-      }
-    }
-  }, [calculateVisibleTimeRange, onVisibleRangeChange, visibleTimeRange])
-
   // Handle scrolling to a specific timestamp with smooth animation
   useEffect(() => {
     if (
-      scrollToTimestamp &&
+      selectedTimestamp &&
       containerRef.current &&
       canvasRef.current &&
       allHours.length > 0 &&
-      scrollToTimestamp !== lastScrollToTimestampRef.current
+      selectedTimestamp !== lastScrollToTimestampRef.current
     ) {
       // Update the last scrolled timestamp
-      lastScrollToTimestampRef.current = scrollToTimestamp
+      lastScrollToTimestampRef.current = selectedTimestamp
 
       // Find the exact day start for the selected timestamp
-      const selectedDate = DateTime.fromMillis(scrollToTimestamp).startOf("day")
+      const selectedDate = DateTime.fromMillis(selectedTimestamp).startOf("day")
 
       const dayStart = selectedDate.toMillis()
 
@@ -518,6 +420,8 @@ export default function WeatherChart({
       const timePerPixel = calculateTimePerPixel()
       if (timePerPixel === 0) return
 
+      console.log({ timePerPixel })
+
       const startTimestamp = allHours[0].time.toMillis()
       const pixelOffset = (dayMiddle - startTimestamp) / timePerPixel
 
@@ -525,62 +429,32 @@ export default function WeatherChart({
       const containerWidth = containerRef.current.clientWidth
       const targetScrollPosition = Math.max(0, pixelOffset - containerWidth / 2)
 
-      // Set flag to indicate we're auto-scrolling
-      isAutoScrollingRef.current = true
-
       // Use smooth scrolling
       containerRef.current.scrollTo({
         left: targetScrollPosition,
         behavior: "smooth"
       })
-
-      // Update visible range after scrolling
-      setTimeout(() => {
-        isAutoScrollingRef.current = false
-        const range = calculateVisibleTimeRange()
-        if (range && onVisibleRangeChange) {
-          setVisibleTimeRange(range)
-          onVisibleRangeChange(range.start, range.end)
-        }
-      }, 500) // Wait for smooth scroll to complete
     }
-  }, [scrollToTimestamp, allHours, calculateTimePerPixel, calculateVisibleTimeRange, onVisibleRangeChange])
+  }, [selectedTimestamp, allHours, calculateTimePerPixel])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
-    if (containerRef.current && currentHourIndex >= 0 && canvasRef.current && !initialScrollDone && centerOnCurrent) {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+
+    if (container && canvas && currentHourIndex >= 0 && !initialScrollDone && allHours.length > 1) {
       const padding = 40
-      const chartWidth = canvasRef.current.width - padding * 2
+      const chartWidth = canvas.getBoundingClientRect().width - padding * 2
       const currentX = padding + (currentHourIndex / (allHours.length - 1)) * chartWidth
 
-      // Center the current time in the viewport
-      const containerWidth = containerRef.current.clientWidth
-      const scrollTo = Math.max(0, currentX - containerWidth / 2)
+      const containerWidth = container.clientWidth
+      const maxScrollLeft = container.scrollWidth - containerWidth
+      const scrollTo = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
 
-      // Set flag to indicate we're auto-scrolling
-      isAutoScrollingRef.current = true
-
-      containerRef.current.scrollLeft = scrollTo
-      // setScrollPosition(scrollTo)
+      container.scrollLeft = scrollTo
       setInitialScrollDone(true)
-
-      // Calculate and set the visible time range for 24 hours
-      const timePerPixel = calculateTimePerPixel()
-      if (timePerPixel > 0) {
-        const visibleStartTime = allHours[0].time.toMillis() + scrollTo * timePerPixel
-        const visibleEndTime = visibleStartTime + containerWidth * timePerPixel
-
-        if (onVisibleRangeChange) {
-          onVisibleRangeChange(visibleStartTime, visibleEndTime)
-        }
-      }
-
-      // Reset auto-scrolling flag after a short delay
-      setTimeout(() => {
-        isAutoScrollingRef.current = false
-      }, 100)
     }
-  }, [currentHourIndex, allHours, initialScrollDone, centerOnCurrent, calculateTimePerPixel, onVisibleRangeChange])
+  }, [currentHourIndex, allHours, initialScrollDone])
 
   return (
     <div className="relative">

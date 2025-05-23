@@ -1,19 +1,18 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import WeekdayCards from "./weekday-cards"
-import type { VisibleTimeRange, WeatherDaily } from "@/types/weather"
+import type { WeatherDaily } from "@/types/weather"
 import { useEffect, useRef, useState } from "react"
 // import throttle from "lodash/throttle"
 
 interface TimelineSectionProps {
   weatherDaily: WeatherDaily
-  visibleTimeRange: VisibleTimeRange | null
   onDayClick: (timestamp: number) => void
   selectedTimestamp: number | null
   timezone: string | null
 }
 
-export default function WeekdaySection({ weatherDaily, visibleTimeRange, onDayClick, selectedTimestamp, timezone }: TimelineSectionProps) {
+export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimestamp, timezone }: TimelineSectionProps) {
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -54,7 +53,6 @@ export default function WeekdaySection({ weatherDaily, visibleTimeRange, onDayCl
 
     requestAnimationFrame(() => {
       setTimeout(() => {
-        console.log("anim", el.scrollWidth)
         el.scrollTo({
           left: (el.scrollWidth / 15) * 6,
           behavior: "instant"
@@ -81,13 +79,7 @@ export default function WeekdaySection({ weatherDaily, visibleTimeRange, onDayCl
       <h3 className="text-lg font-medium mb-2">Weekday Summary</h3>
       <div className="relative">
         <div ref={scrollRef} className="overflow-x-auto pb-2 scroll-smooth">
-          <WeekdayCards
-            weatherDaily={weatherDaily}
-            visibleTimeRange={visibleTimeRange}
-            onDayClick={onDayClick}
-            selectedTimestamp={selectedTimestamp}
-            timezone={timezone}
-          />
+          <WeekdayCards weatherDaily={weatherDaily} onDayClick={onDayClick} selectedTimestamp={selectedTimestamp} timezone={timezone} />
         </div>
         {!atStart && (
           <div className="absolute top-1/2 -translate-y-1/2 -left-2 z-10">

@@ -55,11 +55,6 @@ export type SeriesKey = (typeof seriesKeys)[number]
 
 export type VisibleSeries = Record<SeriesKey, { hidden: boolean; solo: boolean }>
 
-export interface VisibleTimeRange {
-  start: number
-  end: number
-}
-
 export type WindSpeedUnit = "mph" | "kmh"
 export type TemperatureUnit = "fahrenheit" | "celsius"
 export type PrecipitationUnit = "inch" | "mm"

@@ -4,7 +4,6 @@ import { useCallback, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { useWeatherData } from "@/hooks/use-weather-data"
-import type { VisibleTimeRange } from "@/types/weather"
 
 import CurrentWeather from "@/components/weather/current-weather"
 
@@ -21,18 +20,7 @@ export default function WeatherDashboard() {
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  const [visibleTimeRange, setVisibleTimeRange] = useState<VisibleTimeRange | null>(null)
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
-
-  const handleVisibleRangeChange = useCallback((start: number, end: number) => {
-    setVisibleTimeRange(prev => {
-      // Only update if the range has actually changed
-      if (!prev || Math.abs(prev.start - start) > 100 || Math.abs(prev.end - end) > 100) {
-        return { start, end }
-      }
-      return prev
-    })
-  }, [])
 
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
@@ -81,16 +69,13 @@ export default function WeatherDashboard() {
             />
             <ChartSection
               weatherHourly={weatherData.hourly}
-              onVisibleRangeChange={handleVisibleRangeChange}
-              scrollToTimestamp={selectedTimestamp}
-              centerOnCurrent={!selectedTimestamp}
+              selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
               temperatureUnit={temperatureUnit}
               windSpeedUnit={windSpeedUnit}
             />
             <WeekdaySection
               weatherDaily={weatherData.daily}
-              visibleTimeRange={visibleTimeRange}
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
