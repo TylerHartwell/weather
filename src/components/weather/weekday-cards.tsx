@@ -90,7 +90,6 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
                 <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
                 <div className="text-wrap text-sm w-min capitalize text-gray-400">{getWeatherDescription(day.weatherCode)}</div>
               </div>
-              <div className="text-sm text-blue-400">{Math.round(day.precipitationProbabilityMax)}%</div>
               <div className="text-sm flex gap-1 text-green-400">
                 {Math.round(day.windSpeed10mMax)}
                 <span className="inline-block" style={{ transform: `rotate(${Math.round(day.windDirection10mDominant)}deg)` }}>
@@ -100,6 +99,7 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
               <div className="text-sm text-yellow-400">
                 {Math.round(day.temperature2mMax)}° {Math.round(day.temperature2mMin)}°
               </div>
+              <div className="text-sm text-blue-400">{Math.round(day.precipitationProbabilityMax)}%</div>
             </Card>
           )
         })}

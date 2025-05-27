@@ -12,9 +12,17 @@ interface ChartControlsProps {
 
 export default function ChartControls({ visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle, onSoloToggle }: ChartControlsProps) {
   return (
-    <div className="flex items-center justify-between mb-2">
+    <div className="flex items-center justify-between">
       <h3 className="text-lg font-medium">24-Hour Weather</h3>
       <div className="flex items-center gap-4 text-xs">
+        <SeriesControl
+          seriesKey="wind"
+          visibleSeries={visibleSeries}
+          temperatureUnit={temperatureUnit}
+          windSpeedUnit={windSpeedUnit}
+          onHideToggle={onHideToggle}
+          onSoloToggle={onSoloToggle}
+        />
         <SeriesControl
           seriesKey="temperature"
           visibleSeries={visibleSeries}
@@ -26,15 +34,6 @@ export default function ChartControls({ visibleSeries, temperatureUnit, windSpee
 
         <SeriesControl
           seriesKey="precipitation"
-          visibleSeries={visibleSeries}
-          temperatureUnit={temperatureUnit}
-          windSpeedUnit={windSpeedUnit}
-          onHideToggle={onHideToggle}
-          onSoloToggle={onSoloToggle}
-        />
-
-        <SeriesControl
-          seriesKey="wind"
           visibleSeries={visibleSeries}
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
