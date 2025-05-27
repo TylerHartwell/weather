@@ -52,7 +52,9 @@ export default function CurrentWeather({
         </div>
         <div className="text-right">
           <div className="text-lg font-semibold capitalize">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
-          <div className="text-lg">{weatherCurrent.time.weekdayLong}</div>
+          <div className="text-lg">
+            {weatherCurrent.time.weekdayLong} {weatherCurrent.time.toFormat("h:mm a")}
+          </div>
           <div className="text-md">{weatherCurrent.time.toFormat("yyyy-MM-dd")}</div>
         </div>
       </div>

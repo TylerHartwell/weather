@@ -168,14 +168,15 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       // Draw date labels on both sides of the boundary
       ctx.fillStyle = "#9CA3AF"
       ctx.font = "bold 16px Arial"
+      ctx.textBaseline = "top"
 
       // Draw previous date label (left side)
       ctx.textAlign = "right"
-      ctx.fillText(dateLabels.prevDate, x - 5, padding - 25)
+      ctx.fillText(dateLabels.prevDate, x - 5, height - padding + 5)
 
       // Draw next date label (right side)
       ctx.textAlign = "left"
-      ctx.fillText(dateLabels.nextDate, x + 5, padding - 25)
+      ctx.fillText(dateLabels.nextDate, x + 5, height - padding + 5)
     })
 
     // Find min and max values for temperature
@@ -185,8 +186,138 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const tempRange = maxTemp - minTemp
 
     // Find max values for precipitation and wind (min is always 0)
-    const maxPrecip = Math.max(...allHours.map(item => item.precipitationProbability || 0)) + 5
-    const maxWind = Math.max(...allHours.map(item => item.windSpeed10m || 0)) + 5
+    // const maxPrecip = Math.max(...allHours.map(item => item.precipitationProbability || 0)) + 5
+    // const maxWind = Math.max(...allHours.map(item => item.windSpeed10m || 0)) + 5
+
+    // Draw precipitation line if visible
+    if (getVisibilityState("precipitation")) {
+      //stepwise lines
+      ctx.beginPath()
+      ctx.strokeStyle = "#60A5FA"
+      ctx.lineWidth = 2
+
+      allHours.forEach((point, index) => {
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
+        const y = height - padding - ((point.precipitationProbability || 0) / 100) * chartHeight
+
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          const prevY = height - padding - ((allHours[index - 1].precipitationProbability || 0) / 100) * chartHeight
+
+          ctx.lineTo(x, prevY)
+          ctx.lineTo(x, y)
+        }
+      })
+      ctx.stroke()
+
+      //filled area
+      ctx.beginPath()
+      ctx.moveTo(
+        padding,
+        height - padding // Start at bottom-left
+      )
+
+      allHours.forEach((point, index) => {
+        const x = padding + (index / (allHours.length - 1)) * chartWidth
+        const y = height - padding - ((point.precipitationProbability || 0) / 100) * chartHeight
+
+        if (index > 0) {
+          const prevY = height - padding - ((allHours[index - 1].precipitationProbability || 0) / 100) * chartHeight
+          ctx.lineTo(x, prevY)
+          ctx.lineTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+
+      const lastX = padding + ((allHours.length - 1) / (allHours.length - 1)) * chartWidth
+      ctx.lineTo(lastX, height - padding)
+      ctx.lineTo(padding, height - padding)
+      ctx.closePath()
+
+      ctx.fillStyle = "rgba(96, 165, 250, 0.3)"
+      ctx.fill()
+
+      ctx.fillStyle = "#60A5FA"
+      allHours.forEach((point, index) => {
+        if (index % 2 === 0) {
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          const y = height - padding
+          ctx.textBaseline = "bottom"
+
+          ctx.fillText(`${point.precipitationProbability}%`, x, y)
+        }
+      })
+    }
+
+    // Draw wind line if visible
+    if (getVisibilityState("wind")) {
+      ctx.beginPath()
+      ctx.strokeStyle = "#4ADE80" // Green for wind
+      ctx.lineWidth = 2
+      ctx.textAlign = "center" // Horizontal centering
+      ctx.textBaseline = "middle"
+
+      // allHours.forEach((point, index) => {
+      //   const x = padding + (index / (allHours.length - 1)) * chartWidth
+      //   const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
+
+      //   if (index === 0) {
+      //     ctx.moveTo(x, y)
+      //   } else {
+      //     ctx.lineTo(x, y)
+      //   }
+      // })
+      // ctx.stroke()
+
+      ctx.fillStyle = "#4ADE80"
+      allHours.forEach((point, index) => {
+        if (index % 1 === 0) {
+          const x = padding + (index / (allHours.length - 1)) * chartWidth
+          // const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
+          const y = padding
+          const textOffsetX = 0
+          const textOffsetY = -15
+          if (index % 2 === 0) ctx.fillText(`${point.windSpeed10m}`, x + textOffsetX, y + textOffsetY)
+          ctx.save()
+          const arrowOffsetX = 0
+          const arrowOffsetY = 0
+          const baseX = x + arrowOffsetX
+          const baseY = y + arrowOffsetY
+
+          ctx.translate(baseX, baseY) // base of the arrow is now (0, 0)
+
+          // Rotate the canvas
+          const angle = (Math.round(point.windDirection10m) * Math.PI) / 180
+          ctx.rotate(angle)
+
+          const scale = Math.sqrt(Math.sqrt(point.windSpeed10m))
+          ctx.scale(scale * 1.5, scale)
+
+          // Draw the arrow pointing up ("↑"), which will now be rotated
+          ctx.textAlign = "center"
+          ctx.textBaseline = "middle"
+          ctx.fillText("↑", 0, 0)
+
+          // Restore context to avoid affecting other drawings
+          ctx.restore()
+        }
+      })
+
+      // allHours.forEach((point, index) => {
+      //   // Only draw points every 6 hours to avoid clutter
+      //   if (index % 2 === 0) {
+      //     const x = padding + (index / (allHours.length - 1)) * chartWidth
+      //     const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
+
+      //     ctx.beginPath()
+      //     ctx.arc(x, y, 4, 0, Math.PI * 2)
+      //     ctx.fillStyle = "##4ADE80" // Yellow for temperature
+      //     ctx.fill()
+      //   }
+      // })
+    }
 
     // Draw temperature line if visible
     if (getVisibilityState("temperature")) {
@@ -232,90 +363,6 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       })
     }
 
-    // Draw precipitation line if visible
-    if (getVisibilityState("precipitation")) {
-      ctx.beginPath()
-      ctx.strokeStyle = "#60A5FA" // Blue for precipitation
-      ctx.lineWidth = 2
-
-      allHours.forEach((point, index) => {
-        const x = padding + (index / (allHours.length - 1)) * chartWidth
-        const y = height - padding - ((point.precipitationProbability || 0) / maxPrecip) * chartHeight
-
-        if (index === 0) {
-          ctx.moveTo(x, y)
-        } else {
-          ctx.lineTo(x, y)
-        }
-      })
-      ctx.stroke()
-    }
-
-    // Draw wind line if visible
-    if (getVisibilityState("wind")) {
-      ctx.beginPath()
-      ctx.strokeStyle = "#4ADE80" // Green for wind
-      ctx.lineWidth = 2
-
-      allHours.forEach((point, index) => {
-        const x = padding + (index / (allHours.length - 1)) * chartWidth
-        const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
-
-        if (index === 0) {
-          ctx.moveTo(x, y)
-        } else {
-          ctx.lineTo(x, y)
-        }
-      })
-      ctx.stroke()
-
-      ctx.fillStyle = "#4ADE80"
-      allHours.forEach((point, index) => {
-        if (index % 2 === 0) {
-          const x = padding + (index / (allHours.length - 1)) * chartWidth
-          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
-          const textOffsetX = 0
-          const textOffsetY = -15
-          ctx.fillText(`${point.windSpeed10m}`, x + textOffsetX, y + textOffsetY)
-          ctx.save()
-          const arrowOffsetX = 0
-          const arrowOffsetY = 0
-          const baseX = x + arrowOffsetX
-          const baseY = y + arrowOffsetY
-
-          ctx.translate(baseX, baseY) // base of the arrow is now (0, 0)
-
-          // Rotate the canvas
-          const angle = (Math.round(point.windDirection10m) * Math.PI) / 180
-          ctx.rotate(angle)
-
-          const scale = Math.sqrt(point.windSpeed10m)
-          ctx.scale(scale, scale)
-
-          // Draw the arrow pointing up ("↑"), which will now be rotated
-          ctx.textAlign = "center"
-          ctx.textBaseline = "bottom"
-          ctx.fillText("↑", 0, 0)
-
-          // Restore context to avoid affecting other drawings
-          ctx.restore()
-        }
-      })
-
-      allHours.forEach((point, index) => {
-        // Only draw points every 6 hours to avoid clutter
-        if (index % 2 === 0) {
-          const x = padding + (index / (allHours.length - 1)) * chartWidth
-          const y = height - padding - ((point.windSpeed10m || 0) / maxWind) * chartHeight
-
-          ctx.beginPath()
-          ctx.arc(x, y, 4, 0, Math.PI * 2)
-          ctx.fillStyle = "##4ADE80" // Yellow for temperature
-          ctx.fill()
-        }
-      })
-    }
-
     // Draw time labels - but only every few hours to avoid clutter
     ctx.fillStyle = "#FFFFFF"
     ctx.font = "18px Arial"
@@ -340,7 +387,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.strokeStyle = "#FFFFFF"
       ctx.lineWidth = 2
       ctx.setLineDash([5, 3])
-      ctx.moveTo(currentX, padding)
+      ctx.moveTo(currentX, 0)
       ctx.lineTo(currentX, height - padding)
       ctx.stroke()
 
@@ -351,6 +398,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.fillStyle = "#FFFFFF"
       ctx.font = "bold 16px Arial"
       ctx.textAlign = "center"
+      ctx.textBaseline = "top"
 
       const target = DateTime.now().setZone(timezone || "local")
       const targetHour = target.hour
@@ -360,11 +408,11 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const localHour = local.hour
       const localOffset = local.toFormat("ZZ")
 
-      ctx.fillText(`${targetHour} ${targetOffset} / (${localHour} ${localOffset})`, currentX, padding - 10)
+      ctx.fillText(`${targetHour} ${targetOffset}    (${localHour} ${localOffset})`, currentX + 5, 3)
 
       // Draw circle at the top of the line
       ctx.beginPath()
-      ctx.arc(currentX, padding, 5, 0, Math.PI * 2)
+      ctx.arc(currentX, 5, 5, 0, Math.PI * 2)
       ctx.fillStyle = "#FFFFFF"
       ctx.fill()
     }
@@ -379,7 +427,9 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const container = containerRef.current
     const canvas = canvasRef.current
     if (selectedTimestamp && container && canvas && allHours.length > 0) {
-      const selectedDate = DateTime.fromMillis(selectedTimestamp).startOf("day")
+      const selectedDate = DateTime.fromMillis(selectedTimestamp)
+        .setZone(timezone || "local")
+        .startOf("day")
 
       const dayStart = selectedDate.toMillis()
 
@@ -412,7 +462,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
         behavior: "smooth"
       })
     }
-  }, [selectedTimestamp, allHours])
+  }, [selectedTimestamp, allHours, timezone])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
