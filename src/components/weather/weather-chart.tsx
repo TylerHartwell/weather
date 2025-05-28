@@ -172,6 +172,10 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.fillStyle = "#9CA3AF"
       ctx.font = "bold 16px Arial"
       ctx.textBaseline = "top"
+      ctx.shadowColor = "rgba(0, 0, 0, 0.9)" // Shadow color
+      ctx.shadowBlur = 15 // Blur level
+      ctx.shadowOffsetX = 0 // Horizontal offset
+      ctx.shadowOffsetY = 0
 
       // Draw previous date label (left side)
       ctx.textAlign = "right"
@@ -194,7 +198,8 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     // Draw vertical line for current time
     if (currentHourIndex >= 0) {
-      const currentX = chartPaddingX + (currentHourIndex / (allHours.length - 1)) * chartWidth
+      const currentMinute = DateTime.now().minute
+      const currentX = chartPaddingX + ((currentHourIndex + currentMinute / 60) / (allHours.length - 1)) * chartWidth
 
       // Draw dashed line
       ctx.beginPath()
@@ -215,14 +220,14 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.textBaseline = "top"
 
       const target = DateTime.now().setZone(timezone || "local")
-      const targetHour = target.hour
-      const targetOffset = target.toFormat("ZZ")
+      const targetHour = target.toFormat("HH:mm")
+      const targetOffset = target.toFormat("Z")
 
       const local = DateTime.now().setZone("local")
-      const localHour = local.hour
-      const localOffset = local.toFormat("ZZ")
+      const localHour = local.toFormat("HH:mm")
+      const localOffset = local.toFormat("Z")
 
-      ctx.fillText(`${targetHour} ${targetOffset}    (${localHour} ${localOffset})`, currentX + 5, height - chartPaddingBottom + 3)
+      ctx.fillText(`${targetHour} ${targetOffset} UTC    (${localHour} ${localOffset} UTC)`, currentX + 5, height - chartPaddingBottom + 3)
 
       // Draw circle at the top of the line
       ctx.beginPath()
@@ -235,11 +240,17 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     if (getVisibilityState("precipitation")) {
       const previousTextAlign = ctx.textAlign
       const previousTextBaseline = ctx.textBaseline
-      //stepwise lines
-      ctx.beginPath()
+      const previousStrokeStyle = ctx.strokeStyle
+      const previousFillStyle = ctx.fillStyle
+      const previousLineWidth = ctx.lineWidth
+
+      ctx.textAlign = "center"
+      ctx.textBaseline = "bottom"
       ctx.strokeStyle = "#60A5FA"
       ctx.lineWidth = 2
 
+      ctx.beginPath()
+      //stepwise lines
       allHours.forEach((point, index) => {
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
         const y = height - chartPaddingBottom - ((point.precipitationProbability || 0) / 100) * chartHeight
@@ -288,34 +299,40 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
         if (index % 1 === 0) {
           const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
           const y = height - chartPaddingBottom
-          ctx.textBaseline = "bottom"
-
           ctx.fillText(`${point.precipitationProbability}`, x, y)
         }
       })
+
       ctx.textAlign = previousTextAlign
       ctx.textBaseline = previousTextBaseline
+      ctx.strokeStyle = previousStrokeStyle
+      ctx.fillStyle = previousFillStyle
+      ctx.lineWidth = previousLineWidth
     }
 
     // Draw wind line if visible
     if (getVisibilityState("wind")) {
       const previousTextAlign = ctx.textAlign
       const previousTextBaseline = ctx.textBaseline
-      ctx.beginPath()
-      ctx.strokeStyle = "#4ADE80" // Green for wind
-      ctx.lineWidth = 2
-      ctx.textAlign = "center" // Horizontal centering
+      const previousStrokeStyle = ctx.strokeStyle
+      const previousFillStyle = ctx.fillStyle
+      const previousLineWidth = ctx.lineWidth
+      ctx.textAlign = "center"
       ctx.textBaseline = "middle"
-
       ctx.fillStyle = "#4ADE80"
+      ctx.lineWidth = 2
+
+      ctx.beginPath()
+
       allHours.forEach((point, index) => {
         if (index % 1 === 0) {
           const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
-          // const y = height - chartPaddingY - ((point.windSpeed10m || 0) / maxWind) * chartHeight
           const y = 45
           const textOffsetX = 0
           const textOffsetY = -20
-          if (index % 1 === 0) ctx.fillText(`${point.windSpeed10m}`, x + textOffsetX, y + textOffsetY)
+          if (index % 1 === 0) {
+            ctx.fillText(`${point.windSpeed10m}`, x + textOffsetX, y + textOffsetY)
+          }
           ctx.save()
           const arrowOffsetX = 0
           const arrowOffsetY = 0
@@ -340,22 +357,43 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       })
       ctx.textAlign = previousTextAlign
       ctx.textBaseline = previousTextBaseline
+      ctx.strokeStyle = previousStrokeStyle
+      ctx.fillStyle = previousFillStyle
+      ctx.lineWidth = previousLineWidth
     }
 
-    // Draw temperature line if visible
     if (getVisibilityState("temperature")) {
       const previousTextAlign = ctx.textAlign
       const previousTextBaseline = ctx.textBaseline
+      const previousStrokeStyle = ctx.strokeStyle
+      const previousFillStyle = ctx.fillStyle
+      const previousLineWidth = ctx.lineWidth
       ctx.textAlign = "center"
       ctx.textBaseline = "bottom"
-      ctx.beginPath()
       ctx.strokeStyle = "#FACC15" // Yellow for temperature
+      ctx.fillStyle = "#FACC15"
       ctx.lineWidth = 3
 
+      // Draw temperature points and values
+      allHours.forEach((point, index) => {
+        if (index % 1 === 0) {
+          const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
+          const y = height - chartPaddingBottom - 16 - ((point.temperature2m - minTemp) / tempRange) * (chartHeight - 10)
+
+          ctx.beginPath()
+          ctx.arc(x, y, 4, 0, Math.PI * 2)
+          ctx.fill()
+
+          ctx.fillText(`${point.temperature2m}`, x, y - 5)
+        }
+      })
+
+      ctx.beginPath()
+
+      // Draw temperature line
       allHours.forEach((point, index) => {
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
-        const y = height - chartPaddingBottom - ((point.temperature2m - minTemp) / tempRange) * chartHeight
-
+        const y = height - chartPaddingBottom - 16 - ((point.temperature2m - minTemp) / tempRange) * (chartHeight - 10)
         if (index === 0) {
           ctx.moveTo(x, y)
         } else {
@@ -364,41 +402,18 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       })
       ctx.stroke()
 
-      // Draw temperature points - but only every few points to avoid clutter
-      allHours.forEach((point, index) => {
-        // Only draw points every 6 hours to avoid clutter
-        if (index % 1 === 0) {
-          const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
-          const y = height - chartPaddingBottom - ((point.temperature2m - minTemp) / tempRange) * chartHeight
-
-          ctx.beginPath()
-          ctx.arc(x, y, 4, 0, Math.PI * 2)
-          ctx.fillStyle = "#FACC15" // Yellow for temperature
-          ctx.fill()
-        }
-      })
-
-      // Draw temperature values - but only every few points to avoid clutter
-      ctx.fillStyle = "#FACC15" // Yellow for temperature
-      allHours.forEach((point, index) => {
-        // Only draw temperature values every 6 hours to avoid clutter
-        if (index % 1 === 0) {
-          const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
-          const y = height - chartPaddingBottom - ((point.temperature2m - minTemp) / tempRange) * chartHeight - 5
-          ctx.fillText(`${point.temperature2m}`, x, y)
-        }
-      })
       ctx.textAlign = previousTextAlign
       ctx.textBaseline = previousTextBaseline
+      ctx.strokeStyle = previousStrokeStyle
+      ctx.fillStyle = previousFillStyle
+      ctx.lineWidth = previousLineWidth
     }
 
-    // Draw time labels - but only every few hours to avoid clutter
+    // Draw time labels
     ctx.fillStyle = "#FFFFFF"
     ctx.font = "18px Arial"
     ctx.textAlign = "center"
     ctx.textBaseline = "bottom"
-
-    // Draw time labels every 2 hours for better readability in 24-hour view
     allHours.forEach((point, index) => {
       if (index % 1 === 0) {
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
@@ -485,7 +500,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       </div>
       <style jsx>{`
         .hide-scrollbar::-webkit-scrollbar {
-          height: 6px;
+          height: 8px;
         }
         .hide-scrollbar::-webkit-scrollbar-track {
           background: #374151;
