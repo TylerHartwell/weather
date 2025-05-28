@@ -79,7 +79,7 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
           return (
             <Card
               key={`timeline-day-${index}`}
-              className={`bg-gray-800 border-gray-700 text-white flex flex-col items-center min-w-[90px] cursor-pointer hover:bg-gray-700 transition-colors ${
+              className={`bg-gray-800 border-gray-700 text-white flex flex-col items-center min-w-[90px] cursor-pointer hover:bg-gray-700 transition-colors w-0 ${
                 day.time.setZone(timezone || "local").hasSame(today, "day") ? "border-accent" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
               onClick={() => handleDayClick(day.time.toMillis() || 0)}
@@ -88,7 +88,9 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
               <div className="text-xs text-gray-400 mb-1">{day.time.day}</div>
               <div className="grow">
                 <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
-                <div className="text-wrap text-sm w-min capitalize text-gray-400">{getWeatherDescription(day.weatherCode)}</div>
+                <div className=" mt-1 h-8 text-wrap text-center text-xs w-full capitalize text-gray-400">
+                  {getWeatherDescription(day.weatherCode)}
+                </div>
               </div>
               <div className="text-sm flex gap-1 text-green-400">
                 {Math.round(day.windSpeed10mMax)}
