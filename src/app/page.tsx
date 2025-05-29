@@ -69,8 +69,8 @@ export default function WeatherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 flex flex-col items-center">
-      <Card className="w-full max-w-3xl bg-gray-900 border-gray-800 text-white py-2">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center">
+      <Card className="w-full  bg-gray-900 border-gray-800 text-white py-2">
         <CardContent>
           <div className="flex flex-col space-y-2">
             <CurrentWeather

@@ -12,8 +12,8 @@ interface ChartControlsProps {
 
 export default function ChartControls({ visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle, onSoloToggle }: ChartControlsProps) {
   return (
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-medium">24-Hour Weather</h3>
+    <div className="flex items-center justify-center sm:justify-between">
+      <h3 className="text-lg font-medium hidden sm:inline-block text-nowrap">24-Hour Weather</h3>
       <div className="flex items-center gap-4 text-xs">
         <SeriesControl
           seriesKey="wind"

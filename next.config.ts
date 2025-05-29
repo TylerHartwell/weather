@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors https://tylerhartwell.com"
+            value: "frame-ancestors https://www.tylerhartwell.com"
           }
         ]
       }

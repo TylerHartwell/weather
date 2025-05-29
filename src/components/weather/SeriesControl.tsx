@@ -11,19 +11,25 @@ interface SeriesControlProps {
   windSpeedUnit: WindSpeedUnit
 }
 
-const seriesConfig: Record<SeriesKey, { label: (unit: TemperatureUnit | WindSpeedUnit) => string; bgColor: string; textColor: string }> = {
+const seriesConfig: Record<
+  SeriesKey,
+  { label: string; labelUnits: (unit: TemperatureUnit | WindSpeedUnit) => string; bgColor: string; textColor: string }
+> = {
   temperature: {
-    label: unit => `Temperature (${unit === "fahrenheit" ? "°F" : "°C"})`,
+    label: "Temperature",
+    labelUnits: unit => `(${unit === "fahrenheit" ? "°F" : "°C"})`,
     bgColor: "bg-yellow-400",
     textColor: "text-yellow-400"
   },
   precipitation: {
-    label: () => "Precipitation (%)",
+    label: "Precipitation",
+    labelUnits: () => "(%)",
     bgColor: "bg-blue-400",
     textColor: "text-blue-400"
   },
   wind: {
-    label: unit => `Wind (${unit === "mph" ? "mph" : "kmh"})`,
+    label: "Wind",
+    labelUnits: unit => `(${unit === "mph" ? "mph" : "kmh"})`,
     bgColor: "bg-green-400",
     textColor: "text-green-400"
   }
@@ -31,24 +37,27 @@ const seriesConfig: Record<SeriesKey, { label: (unit: TemperatureUnit | WindSpee
 
 export default function SeriesControl({ seriesKey, visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle, onSoloToggle }: SeriesControlProps) {
   const series = visibleSeries[seriesKey]
-  const { label, bgColor, textColor } = seriesConfig[seriesKey]
+  const { label, labelUnits, bgColor, textColor } = seriesConfig[seriesKey]
   const unit = seriesKey === "temperature" ? temperatureUnit : seriesKey === "wind" ? windSpeedUnit : undefined
 
   return (
     <div className="flex items-center gap-1.5">
-      <div className="flex gap-1">
-        <Button variant={!series.hidden ? "secondary" : "destructive"} size="sm" onClick={() => onHideToggle(seriesKey)} className="h-5 text-xs">
-          <EyeOff className="h-4 w-4" />
+      <div className="flex flex-col gap-1">
+        <Button variant={!series.hidden ? "secondary" : "destructive"} size="sm" onClick={() => onHideToggle(seriesKey)} className="h-4 text-xs">
+          <EyeOff className="h-2 w-2" />
         </Button>
 
-        <Button variant={!series.solo ? "secondary" : "destructive"} size="sm" onClick={() => onSoloToggle(seriesKey)} className="h-5 text-xs">
-          <Target className="h-4 w-4" />
+        <Button variant={!series.solo ? "secondary" : "destructive"} size="sm" onClick={() => onSoloToggle(seriesKey)} className="h-4 text-xs">
+          <Target className="h-2 w-2" />
         </Button>
       </div>
 
       <div className="flex items-center">
-        <div className={`w-3 h-3 ${bgColor} rounded-full mr-1`}></div>
-        <span className={`${textColor}`}>{label(unit!)}</span>
+        <div className={`w-3 h-3 ${bgColor} rounded-full mr-1 hidden sm:inline-block`}></div>
+        <span className={`${textColor}`}>
+          <span className="hidden 2xs:inline-block">{label} </span>
+          <span>{labelUnits(unit!)}</span>
+        </span>
       </div>
     </div>
   )

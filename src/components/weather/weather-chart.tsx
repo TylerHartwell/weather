@@ -178,12 +178,18 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.shadowOffsetY = 0
 
       // Draw previous date label (left side)
-      ctx.textAlign = "right"
-      ctx.fillText(dateLabels.prevDate, x - 5, 0)
+      if (timeOffset !== 0) {
+        ctx.textAlign = "right"
+        ctx.fillText(dateLabels.prevDate, x - 5, 0)
+      }
 
       // Draw next date label (right side)
       ctx.textAlign = "left"
       ctx.fillText(dateLabels.nextDate, x + 5, 0)
+
+      // Draw next date label at noon
+      ctx.textAlign = "center"
+      ctx.fillText(dateLabels.nextDate, x + (1000 * 60 * 60 * 12) / timePerPixel, 0)
     })
 
     // Find min and max values for temperature
@@ -482,7 +488,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   }, [currentHourIndex, allHours, initialScrollDone])
 
   return (
-    <div className="relative">
+    <div className="relative mt-1">
       <div
         ref={containerRef}
         className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto hide-scrollbar"

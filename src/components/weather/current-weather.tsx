@@ -25,37 +25,50 @@ export default function CurrentWeather({
   locationName
 }: CurrentWeatherProps) {
   return (
-    <div>
-      <div className="flex items-center justify-between text-lg font-medium">
+    <div className="mb-0">
+      <div className="flex items-center justify-between text-sm font-medium">
         Current Weather
         <div className="flex items-center">
           <span className="text-sm text-gray-400 font-normal">Results for</span>
           <CardTitle className="ml-2 text-base font-medium">{locationName}</CardTitle>
         </div>
       </div>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center h-20">
         <div className="flex items-center">
-          <WeatherIcon type={"sunny"} size="lg" />
+          <WeatherIcon type={"sunny"} size="lg" className="hidden 3xs:inline-block" />
           <div className="text-6xl font-semibold ml-2" onClick={toggleTempUnit}>
             {Math.round(weatherCurrent.temperature2m)}
             <span className="text-2xl">{temperatureUnit === "fahrenheit" ? "°F" : "°C"}</span>
           </div>
-          <div className="flex flex-col ml-2 text-gray-400">
+          <div className="flex flex-col ml-2 text-gray-400 text-sm text-nowrap">
             <span onClick={togglePrecipitationUnit}>
-              Precipitation: {Math.round(weatherCurrent.precipitation).toFixed(1)} {precipitationUnit}
+              <span className="hidden 2xs:inline">Precipitation: </span>
+              <span className="inline 2xs:hidden">P: </span>
+              <span>
+                {Math.round(weatherCurrent.precipitation).toFixed(1)} {precipitationUnit}
+              </span>
             </span>
-            <span>Humidity: {weatherCurrent.relativeHumidity2m}%</span>
+            <span>
+              <span className="hidden 2xs:inline">Humidity: </span>
+              <span className="inline 2xs:hidden">H: </span>
+              <span>{weatherCurrent.relativeHumidity2m}%</span>
+            </span>
             <span onClick={toggleWindUnit}>
-              Wind: {Math.round(weatherCurrent.windSpeed10m)} {windSpeedUnit}
+              <span className="hidden 2xs:inline">Wind: </span>
+              <span className="inline 2xs:hidden">W: </span>
+              <span>
+                {Math.round(weatherCurrent.windSpeed10m)} {windSpeedUnit}
+              </span>
             </span>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg font-semibold capitalize">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
-          <div className="text-lg">
-            {weatherCurrent.time.weekdayLong} {weatherCurrent.time.toFormat("h:mm a")}
+        <div className="text-right flex flex-col items-end leading-tight">
+          <div className="text-md xs:text-lg font-semibold capitalize leading-tight">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
+          <div className="text-md xs:text-lg w-min xs:w-auto leading-tight">
+            <span>{weatherCurrent.time.weekdayLong} </span>
+            <span className="text-nowrap">{weatherCurrent.time.toFormat("h:mm a")}</span>
           </div>
-          <div className="text-md">{weatherCurrent.time.toFormat("yyyy-MM-dd")}</div>
+          <div className="text-xs xs:text:md">{weatherCurrent.time.toFormat("yyyy-MM-dd")}</div>
         </div>
       </div>
     </div>

@@ -3,9 +3,10 @@ import { Sun, Cloud, CloudFog, CloudDrizzle, CloudRain, CloudSnow, Snowflake, Za
 interface WeatherIconProps {
   type: string
   size?: "sm" | "md" | "lg"
+  className?: string
 }
 
-export default function WeatherIcon({ type, size = "md" }: WeatherIconProps) {
+export default function WeatherIcon({ type, size = "md", className = "" }: WeatherIconProps) {
   const sizeClasses = {
     sm: "w-8 h-8",
     md: "w-12 h-12",
@@ -133,5 +134,5 @@ export default function WeatherIcon({ type, size = "md" }: WeatherIconProps) {
     }
   }
 
-  return <div className="flex items-center justify-center">{getIcon()}</div>
+  return <div className={`flex items-center justify-center ${className}`}>{getIcon()}</div>
 }
