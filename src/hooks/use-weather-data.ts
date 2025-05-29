@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useCallback, useState } from "react"
 import type { PrecipitationUnit, TemperatureUnit, WeatherData, WindSpeedUnit } from "@/types/weather"
 import { fetchWeatherData } from "@/services/weather-api"
 
@@ -11,7 +11,7 @@ interface FetchWeatherParams {
   precipitationUnit: PrecipitationUnit
 }
 
-export function useWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit }: FetchWeatherParams) {
+export function useWeatherData() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -30,10 +30,6 @@ export function useWeatherData({ location, windSpeedUnit, temperatureUnit, preci
       setIsLoading(false)
     }
   }, [])
-
-  useEffect(() => {
-    resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  }, [resetWeatherData, location, windSpeedUnit, temperatureUnit, precipitationUnit])
 
   return {
     weatherData,

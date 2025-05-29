@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { useWeatherData } from "@/hooks/use-weather-data"
@@ -19,8 +19,17 @@ export default function WeatherDashboard() {
   const [windSpeedUnit, setWindSpeedUnit] = useState<WindSpeedUnit>("mph")
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
-  const { weatherData, isLoading, error, resetWeatherData } = useWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
+
+  const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
+
+  const handleFetchWeather = useCallback(() => {
+    resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
+  }, [location, precipitationUnit, resetWeatherData, temperatureUnit, windSpeedUnit])
+
+  useEffect(() => {
+    handleFetchWeather()
+  }, [handleFetchWeather])
 
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
@@ -28,17 +37,24 @@ export default function WeatherDashboard() {
 
   const toggleWindUnit = () => {
     setWindSpeedUnit(prev => (prev === "mph" ? "kmh" : "mph"))
+    handleFetchWeather()
   }
   const toggleTempUnit = () => {
     setTemperatureUnit(prev => (prev === "fahrenheit" ? "celsius" : "fahrenheit"))
+    handleFetchWeather()
   }
   const togglePrecipitationUnit = () => {
     setPrecipitationUnit(prev => (prev === "inch" ? "mm" : "inch"))
+    handleFetchWeather()
   }
 
-  const handleSearch = useCallback((query: string) => {
-    setLocation(query)
-  }, [])
+  const handleSearch = useCallback(
+    (query: string) => {
+      setLocation(query)
+      handleFetchWeather()
+    },
+    [handleFetchWeather]
+  )
 
   if (isLoading) {
     return <LoadingState />

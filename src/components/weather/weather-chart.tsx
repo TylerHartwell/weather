@@ -172,7 +172,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.fillStyle = "#9CA3AF"
       ctx.font = "bold 16px Arial"
       ctx.textBaseline = "top"
-      ctx.shadowColor = "rgba(0, 0, 0, 0.9)" // Shadow color
+      ctx.shadowColor = "rgba(0, 0, 0, 1)" // Shadow color
       ctx.shadowBlur = 15 // Blur level
       ctx.shadowOffsetX = 0 // Horizontal offset
       ctx.shadowOffsetY = 0
@@ -243,11 +243,13 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const previousStrokeStyle = ctx.strokeStyle
       const previousFillStyle = ctx.fillStyle
       const previousLineWidth = ctx.lineWidth
+      const previousShadowBlur = ctx.shadowBlur
 
-      ctx.textAlign = "center"
+      ctx.textAlign = "left"
       ctx.textBaseline = "bottom"
       ctx.strokeStyle = "#60A5FA"
-      ctx.lineWidth = 2
+      ctx.lineWidth = 1
+      ctx.shadowBlur = 0
 
       ctx.beginPath()
       //stepwise lines
@@ -295,6 +297,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.fill()
 
       ctx.fillStyle = "#60A5FA"
+      ctx.shadowBlur = 15
       allHours.forEach((point, index) => {
         if (index % 1 === 0) {
           const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
@@ -308,6 +311,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       ctx.strokeStyle = previousStrokeStyle
       ctx.fillStyle = previousFillStyle
       ctx.lineWidth = previousLineWidth
+      ctx.shadowBlur = previousShadowBlur
     }
 
     // Draw wind line if visible
@@ -450,16 +454,6 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const containerWidth = container.clientWidth
       const maxScrollLeft = container.scrollWidth - containerWidth
       const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, pixelOffset - containerWidth / 2))
-
-      console.log({
-        selectedDate: selectedDate.toFormat("yyyy-MM-dd HH"),
-        dayStart: DateTime.fromMillis(dayStart).toFormat("yyyy-MM-dd HH"),
-        dayMiddle: DateTime.fromMillis(dayMiddle).toFormat("yyyy-MM-dd HH"),
-        startTimestamp: DateTime.fromMillis(startTimestamp).toFormat("yyyy-MM-dd HH"),
-        pixelOffset,
-        containerWidth,
-        targetScrollPosition
-      })
 
       // Use smooth scrolling
       container.scrollTo({
