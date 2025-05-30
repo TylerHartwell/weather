@@ -76,8 +76,8 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
   return (
     <div>
       <h3 className="text-lg font-medium">Weekday Summary</h3>
-      <div className="relative">
-        <div ref={scrollRef} className="overflow-x-auto pb-2 scroll-smooth hide-scrollbar">
+      <div className="relative flex justify-center">
+        <div ref={scrollRef} className="overflow-x-auto pb-2 scroll-smooth hide-scrollbar w-min">
           <WeekdayCards weatherDaily={weatherDaily} onDayClick={onDayClick} selectedTimestamp={selectedTimestamp} timezone={timezone} />
         </div>
         <style jsx>{`
