@@ -1,5 +1,7 @@
 import type { NextConfig } from "next"
 
+const prod = process.env.NODE_ENV === "production"
+
 const nextConfig: NextConfig = {
   async headers() {
     return [
@@ -8,7 +10,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors https://www.tylerhartwell.com"
+            value: `frame-ancestors 'self' https://www.tylerhartwell.com${prod ? "" : " http://localhost:3000"};`
           }
         ]
       }
