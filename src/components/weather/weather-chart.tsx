@@ -82,10 +82,8 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     if (!canvasRef.current) return
 
     const canvas = canvasRef.current
-    const dpi = window.devicePixelRatio
-    canvas.setAttribute("height", (canvas.clientHeight * dpi).toString())
-    canvas.setAttribute("width", (canvas.clientWidth * dpi).toString())
     const ctx = canvas.getContext("2d", { alpha: false }) // Use non-alpha for better performance
+
     if (!ctx) return
 
     // Set dimensions - make it wider for scrolling
