@@ -17,7 +17,6 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
     switch (type) {
       case "Clear":
         return <Sun className={`${sizeClasses[size]} text-yellow-400`} />
-
       case "Mainly clear":
         return (
           <div className={`${sizeClasses[size]} relative`}>
@@ -32,18 +31,12 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
             <Cloud className="absolute bottom-0 right-0 w-3/4 h-3/4 text-gray-500" />
           </div>
         )
-
-      // Overcast conditions
       case "Overcast":
         return <Cloud className={`${sizeClasses[size]} text-gray-500`} />
-
-      // Fog conditions
       case "Fog":
         return <CloudFog className={`${sizeClasses[size]} text-gray-400`} />
       case "Rime fog":
         return <CloudFog className={`${sizeClasses[size]} text-blue-200`} />
-
-      // Drizzle conditions
       case "Light drizzle":
         return <CloudDrizzle className={`${sizeClasses[size]} text-blue-300`} />
       case "Moderate drizzle":
@@ -64,8 +57,6 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
             <Snowflake className="absolute bottom-0 right-0 w-1/3 h-1/3 text-blue-200" />
           </div>
         )
-
-      // Rain conditions
       case "Light rain":
       case "Light rain showers":
         return <CloudRain className={`${sizeClasses[size]} text-blue-400`} />
@@ -89,8 +80,6 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
             <Snowflake className="absolute bottom-0 right-0 w-1/3 h-1/3 text-blue-200" />
           </div>
         )
-
-      // Snow conditions
       case "Light snow":
       case "Light snow showers":
         return <CloudSnow className={`${sizeClasses[size]} text-blue-100`} />
@@ -101,8 +90,6 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
         return <CloudSnow className={`${sizeClasses[size]} text-blue-300`} />
       case "Snow grains":
         return <Snowflake className={`${sizeClasses[size]} text-blue-200`} />
-
-      // Thunderstorm conditions
       case "Thunderstorm":
         return (
           <div className={`${sizeClasses[size]} relative`}>
@@ -127,8 +114,6 @@ export default function WeatherIcon({ type, size = "md", className = "" }: Weath
             <Snowflake className="absolute bottom-0 left-0 transform translate-y-1/2 w-1/3 h-1/3 text-gray-300" />
           </div>
         )
-
-      // Default case
       default:
         return <Cloud className={`${sizeClasses[size]} text-gray-400`} />
     }

@@ -474,17 +474,17 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const container = containerRef.current
     const canvas = canvasRef.current
 
-    if (container && canvas && currentHourIndex >= 0 && !initialScrollDone && allHours.length > 1) {
-      const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
-      const currentX = chartPaddingX + (currentHourIndex / (allHours.length - 1)) * chartWidth
+    if (!container || !canvas || initialScrollDone || currentHourIndex < 0 || allHours.length <= 1) return
 
-      const containerWidth = container.clientWidth
-      const maxScrollLeft = container.scrollWidth - containerWidth
-      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
+    const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
+    const currentX = chartPaddingX + (currentHourIndex / (allHours.length - 1)) * chartWidth
 
-      container.scrollLeft = targetScrollPosition
-      setInitialScrollDone(true)
-    }
+    const containerWidth = container.clientWidth
+    const maxScrollLeft = container.scrollWidth - containerWidth
+    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
+
+    container.scrollLeft = targetScrollPosition
+    setInitialScrollDone(true)
   }, [currentHourIndex, allHours, initialScrollDone])
 
   return (

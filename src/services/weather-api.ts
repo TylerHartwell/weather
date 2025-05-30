@@ -72,7 +72,6 @@ export async function fetchWeatherData(
 
     const response = responses[0]
 
-    // const utcOffsetSeconds = response.utcOffsetSeconds()
     const timezone = response.timezone()
     const timezoneAbbreviation = response.timezoneAbbreviation()
     const latitude = response.latitude()

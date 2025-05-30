@@ -1,4 +1,3 @@
-// import { Checkbox } from "@/components/ui/checkbox"
 import type { SeriesKey, TemperatureUnit, VisibleSeries, WindSpeedUnit } from "@/types/weather"
 import SeriesControl from "./SeriesControl"
 

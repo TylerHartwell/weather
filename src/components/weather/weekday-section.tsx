@@ -3,7 +3,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import WeekdayCards from "./weekday-cards"
 import type { WeatherDaily } from "@/types/weather"
 import { useEffect, useRef, useState } from "react"
-// import throttle from "lodash/throttle"
 
 interface TimelineSectionProps {
   weatherDaily: WeatherDaily
@@ -38,7 +37,7 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
     if (!el) return
 
     const handleScrollEdgeCheck = () => {
-      const isAtStart = el.scrollLeft <= 0
+      const isAtStart = el.scrollLeft <= 1
       const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1
 
       const stateChanged = lastEdgeState.current.atStart !== isAtStart || lastEdgeState.current.atEnd !== isAtEnd
