@@ -1,5 +1,5 @@
 import type { SeriesKey, TemperatureUnit, VisibleSeries, WindSpeedUnit } from "@/types/weather"
-import SeriesControl from "./seriesControl"
+import SeriesControl from "./series-control"
 
 interface ChartControlsProps {
   visibleSeries: VisibleSeries
