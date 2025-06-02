@@ -64,11 +64,14 @@ export default function CurrentWeather({
         </div>
         <div className="text-right flex flex-col items-end leading-tight">
           <div className="text-md xs:text-lg font-semibold capitalize leading-tight">{getWeatherDescription(weatherCurrent.weatherCode)}</div>
-          <div className="text-md xs:text-lg w-min xs:w-auto leading-tight">
-            <span>{weatherCurrent.time.weekdayLong} </span>
+          <div className="text-md xs:text-lg w-min xs:w-auto leading-tight flex flex-col">
+            <span className="flex gap-1">
+              <span>{weatherCurrent.time.weekdayLong} </span>
+              <span className="">{weatherCurrent.time.toFormat("M/dd")}</span>
+            </span>
+
             <span className="text-nowrap">{weatherCurrent.time.toFormat("h:mm a")}</span>
           </div>
-          <div className="text-xs xs:text:md">{weatherCurrent.time.toFormat("yyyy-MM-dd")}</div>
         </div>
       </div>
     </div>

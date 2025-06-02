@@ -82,7 +82,7 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
         </div>
         <style jsx>{`
           .hide-scrollbar::-webkit-scrollbar {
-            height: 6px;
+            height: 16px;
           }
           .hide-scrollbar::-webkit-scrollbar-track {
             background: #374151;
@@ -98,15 +98,27 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
         `}</style>
         {!atStart && (
           <div className="absolute top-1/2 -translate-y-1/2 -left-2 z-10">
-            <Button onClick={() => scrollTo(-1)} variant="outline" size="icon" className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md">
-              <ChevronLeft className="h-4 w-4" />
+            <Button
+              onClick={() => scrollTo(-1)}
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
+            >
+              <span className="translate-x-1 -translate-y-0.25">|</span>
+              <ChevronLeft className="h-4 w-4 " />
             </Button>
           </div>
         )}
         {!atEnd && (
           <div className="absolute top-1/2 -translate-y-1/2 -right-2 z-10">
-            <Button onClick={() => scrollTo(1)} variant="outline" size="icon" className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md">
+            <Button
+              onClick={() => scrollTo(1)}
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
+            >
               <ChevronRight className="h-4 w-4" />
+              <span className="-translate-x-1 -translate-y-0.25">|</span>
             </Button>
           </div>
         )}

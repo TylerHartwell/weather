@@ -234,7 +234,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const localHour = local.toFormat("HH:mm")
       const localOffset = local.toFormat("Z")
 
-      ctx.fillText(`${targetHour} ${targetOffset} UTC    (${localHour} ${localOffset} UTC)`, currentX + 5, height - chartPaddingBottom + 3)
+      ctx.fillText(`${targetHour} ${targetOffset} UTC    (${localHour} ${localOffset} UTC)`, currentX + 5, height - chartPaddingBottom + 5)
 
       // Draw circle at the top of the line
       ctx.beginPath()
@@ -501,7 +501,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       </div>
       <style jsx>{`
         .hide-scrollbar::-webkit-scrollbar {
-          height: 8px;
+          height: 16px;
         }
         .hide-scrollbar::-webkit-scrollbar-track {
           background: #374151;

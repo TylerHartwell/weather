@@ -41,13 +41,23 @@ export default function SeriesControl({ seriesKey, visibleSeries, temperatureUni
   const unit = seriesKey === "temperature" ? temperatureUnit : seriesKey === "wind" ? windSpeedUnit : undefined
 
   return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex flex-col gap-1">
-        <Button variant={!series.hidden ? "secondary" : "destructive"} size="sm" onClick={() => onHideToggle(seriesKey)} className="h-4 text-xs">
+    <div className="flex items-center gap-0.5">
+      <div className="flex gap-0.5">
+        <Button
+          variant={!series.hidden ? "secondary" : "destructive"}
+          size="sm"
+          onClick={() => onHideToggle(seriesKey)}
+          className="h-8 w-8 text-xs opacity-90"
+        >
           <EyeOff className="h-2 w-2" />
         </Button>
 
-        <Button variant={!series.solo ? "secondary" : "destructive"} size="sm" onClick={() => onSoloToggle(seriesKey)} className="h-4 text-xs">
+        <Button
+          variant={!series.solo ? "secondary" : "destructive"}
+          size="sm"
+          onClick={() => onSoloToggle(seriesKey)}
+          className="h-8 w-8 text-xs opacity-90"
+        >
           <Target className="h-2 w-2" />
         </Button>
       </div>
