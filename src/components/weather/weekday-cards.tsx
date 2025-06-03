@@ -6,6 +6,7 @@ import type { WeatherDaily, WeatherDay } from "@/types/weather"
 import WeatherIcon from "./weather-icon"
 import { getWeatherDescription } from "@/lib/weather-utils"
 import { DateTime } from "luxon"
+import { Sunrise, Sunset } from "lucide-react"
 
 interface WeekdayCardsProps {
   weatherDaily: WeatherDaily
@@ -34,7 +35,9 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
         windDirection10mDominant: weatherDaily.windDirection10mDominant[i],
         precipitationProbabilityMax: weatherDaily.precipitationProbabilityMax[i],
 
-        weatherCode: weatherDaily.weatherCode[i]
+        weatherCode: weatherDaily.weatherCode[i],
+        sunrise: weatherDaily.sunrise[i],
+        sunset: weatherDaily.sunset[i]
       })
     }
 
@@ -91,6 +94,18 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
                 <div className=" mt-1 h-8 text-wrap text-center text-xs w-full capitalize text-gray-400">
                   {getWeatherDescription(day.weatherCode)}
                 </div>
+              </div>
+              <div className="flex text-xs justify-around items-center w-full">
+                <span className="flex flex-col items-center">
+                  <Sunrise className=" w-3/4 h-3/4 text-yellow-200" />
+
+                  <span>{day.sunrise.toFormat("HH:mm")}</span>
+                </span>
+                <span className="flex flex-col items-center ">
+                  <Sunset className=" w-3/4 h-3/4 text-yellow-600" />
+
+                  <span>{day.sunset.toFormat("HH:mm")}</span>
+                </span>
               </div>
               <div className="text-sm flex gap-1 text-green-400">
                 {Math.round(day.windSpeed10mMax)}

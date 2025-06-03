@@ -54,7 +54,9 @@ export async function fetchWeatherData(
         "wind_speed_10m_max",
         "wind_direction_10m_dominant",
         "precipitation_probability_max",
-        "weather_code"
+        "weather_code",
+        "sunrise",
+        "sunset"
       ],
       "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation_probability"],
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
@@ -80,6 +82,8 @@ export async function fetchWeatherData(
     const current = response.current()!
     const hourly = response.hourly()!
     const daily = response.daily()!
+    const sunrises = daily.variables(6)!
+    const sunsets = daily.variables(7)!
 
     const weatherData = {
       current: {
@@ -109,7 +113,13 @@ export async function fetchWeatherData(
         windSpeed10mMax: daily.variables(2)!.valuesArray()!,
         windDirection10mDominant: daily.variables(3)!.valuesArray()!,
         precipitationProbabilityMax: daily.variables(4)!.valuesArray()!,
-        weatherCode: daily.variables(5)!.valuesArray()!
+        weatherCode: daily.variables(5)!.valuesArray()!,
+        sunrise: [...Array(sunrises.valuesInt64Length())].map((_, i) =>
+          DateTime.fromSeconds(Number(sunrises.valuesInt64(i))).setZone(timezone || "local")
+        ),
+        sunset: [...Array(sunsets.valuesInt64Length())].map((_, i) =>
+          DateTime.fromSeconds(Number(sunsets.valuesInt64(i))).setZone(timezone || "local")
+        )
       },
       timezone,
       timezoneAbbreviation,

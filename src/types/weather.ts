@@ -44,6 +44,8 @@ export interface WeatherDaily {
   windDirection10mDominant: Float32Array
   precipitationProbabilityMax: Float32Array
   weatherCode: Float32Array
+  sunrise: DateTime[]
+  sunset: DateTime[]
 }
 
 export type WeatherDay = {
