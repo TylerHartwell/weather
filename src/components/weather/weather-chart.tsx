@@ -422,7 +422,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     // Draw time labels
     ctx.fillStyle = "#FFFFFF"
-    ctx.font = "18px Arial"
+    ctx.font = "16px Arial"
     ctx.textAlign = "center"
     ctx.textBaseline = "bottom"
     allHours.forEach((point, index) => {
@@ -430,7 +430,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
         const y = height
         const adjustedHour = point.time.hour
-        ctx.fillText(adjustedHour.toString(), x, y)
+        ctx.fillText(adjustedHour.toString().padStart(2, "0"), x, y)
       }
     })
   }, [allHours, getVisibilityState, currentHourIndex, timezone, calculateTimePerPixel])
@@ -492,29 +492,10 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     <div className="relative mt-1">
       <div
         ref={containerRef}
-        className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto hide-scrollbar"
-        style={{
-          WebkitOverflowScrolling: "touch" // Smooth scrolling on iOS
-        }}
+        className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto scrollbar scrollbar-h-4 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
       >
         <canvas ref={canvasRef} height={250} className="h-full" />
       </div>
-      <style jsx>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          height: 16px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-track {
-          background: #374151;
-          border-radius: 3px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-thumb {
-          background: #4b5563;
-          border-radius: 3px;
-        }
-        .hide-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #6b7280;
-        }
-      `}</style>
     </div>
   )
 }

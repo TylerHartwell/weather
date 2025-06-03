@@ -77,25 +77,13 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
     <div>
       <h3 className="text-lg font-medium">Weekday Summary</h3>
       <div className="relative flex justify-center">
-        <div ref={scrollRef} className="overflow-x-auto pb-2 scroll-smooth hide-scrollbar w-min">
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto pb-2 scroll-smooth w-min scrollbar scrollbar-h-4 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+        >
           <WeekdayCards weatherDaily={weatherDaily} onDayClick={onDayClick} selectedTimestamp={selectedTimestamp} timezone={timezone} />
         </div>
-        <style jsx>{`
-          .hide-scrollbar::-webkit-scrollbar {
-            height: 16px;
-          }
-          .hide-scrollbar::-webkit-scrollbar-track {
-            background: #374151;
-            border-radius: 3px;
-          }
-          .hide-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 3px;
-          }
-          .hide-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-          }
-        `}</style>
+
         {!atStart && (
           <div className="absolute top-1/2 -translate-y-1/2 -left-2 z-10">
             <Button
