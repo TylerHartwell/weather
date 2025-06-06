@@ -79,7 +79,7 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
       <div className="relative flex justify-center">
         <div
           ref={scrollRef}
-          className="overflow-x-auto pb-2 scroll-smooth w-min scrollbar scrollbar-h-4 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+          className="overflow-x-auto pb-2 scroll-smooth w-min scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
         >
           <WeekdayCards weatherDaily={weatherDaily} onDayClick={onDayClick} selectedTimestamp={selectedTimestamp} timezone={timezone} />
         </div>

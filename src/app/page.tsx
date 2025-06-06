@@ -96,7 +96,7 @@ export default function WeatherDashboard() {
               selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
             />
-            <SearchBar onSearch={handleSearch} initialQuery={location} />
+            <SearchBar onSearch={handleSearch} />
           </div>
         </CardContent>
       </Card>

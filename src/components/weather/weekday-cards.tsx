@@ -99,12 +99,12 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
                 <span className="flex flex-col items-center">
                   <Sunrise className=" w-3/4 h-3/4 text-yellow-200" />
 
-                  <span>{day.sunrise.toFormat("HH:mm")}</span>
+                  <span>{day.sunrise.toFormat("h:mm") + day.sunrise.toFormat("a").toLowerCase()}</span>
                 </span>
                 <span className="flex flex-col items-center ">
                   <Sunset className=" w-3/4 h-3/4 text-yellow-600" />
 
-                  <span>{day.sunset.toFormat("HH:mm")}</span>
+                  <span>{day.sunset.toFormat("h:mm") + day.sunset.toFormat("a").toLowerCase()}</span>
                 </span>
               </div>
               <div className="text-sm flex gap-1 text-green-400">

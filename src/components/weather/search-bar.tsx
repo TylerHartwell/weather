@@ -11,8 +11,8 @@ interface SearchBarProps {
   initialQuery?: string
 }
 
-export default function SearchBar({ onSearch, initialQuery = "" }: SearchBarProps) {
-  const [searchQuery, setSearchQuery] = useState(initialQuery)
+export default function SearchBar({ onSearch }: SearchBarProps) {
+  const [searchQuery, setSearchQuery] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,13 +23,14 @@ export default function SearchBar({ onSearch, initialQuery = "" }: SearchBarProp
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
-      <div>Search Location:</div>
+      <div>Location:</div>
       <div className="flex gap-2 grow">
         <Input
           id="search-location"
           type="text"
-          placeholder="Search for a location..."
+          placeholder="Search for a city or postal code..."
           value={searchQuery}
+          onFocus={e => e.target.select()}
           onChange={e => setSearchQuery(e.target.value)}
           className="bg-gray-800 border-gray-700"
         />

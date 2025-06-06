@@ -4,6 +4,7 @@ import type React from "react"
 import { DateTime } from "luxon"
 import { useEffect, useRef, useState, useCallback, useMemo, RefObject } from "react"
 import type { SeriesKey, VisibleSeries, WeatherHour, WeatherHourly } from "@/types/weather"
+import { getWeatherDescription } from "@/lib/weather-utils"
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
@@ -17,10 +18,118 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [initialScrollDone, setInitialScrollDone] = useState(false)
+  const [isLongPress, setIsLongPress] = useState(false)
+  const [pointerX, setPointerX] = useState<number | null>(null)
+  const longPressTimeout = useRef<number | null>(null)
+  const isDragging = useRef(false)
+  const dragStartX = useRef(0)
+  const scrollStartX = useRef(0)
+  const pointerDownPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const dragThreshold = 5 // px before considering it a drag
+  const isPointerDown = useRef(false)
 
   const chartPaddingX = 40
   const chartPaddingBottom = 40
   const chartPaddingTop = 80
+  const chartWidthPerHour = 30
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    if (!canvas || !container) return
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isLongPress) {
+        e.preventDefault() // block horizontal scroll via wheel
+      }
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isLongPress) {
+        e.preventDefault() // block touch-driven horizontal scroll
+      }
+    }
+
+    const handlePointerDown = (e: PointerEvent) => {
+      isPointerDown.current = true
+      pointerDownPos.current = { x: e.clientX, y: e.clientY }
+
+      longPressTimeout.current = window.setTimeout(() => {
+        setIsLongPress(true)
+        updatePointerX(e)
+      }, 200) // 500ms for long press
+
+      dragStartX.current = e.clientX
+      scrollStartX.current = container.scrollLeft
+    }
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isPointerDown.current) return
+      // Cancel long-press if pointer has moved beyond threshold
+      const dx = Math.abs(e.clientX - pointerDownPos.current.x)
+      const dy = Math.abs(e.clientY - pointerDownPos.current.y)
+      if (!isLongPress && (dx > dragThreshold || dy > dragThreshold)) {
+        if (longPressTimeout.current !== null) {
+          clearTimeout(longPressTimeout.current)
+          longPressTimeout.current = null
+        }
+        if (!isDragging.current) {
+          isDragging.current = true
+        }
+      }
+      if (isLongPress) {
+        updatePointerX(e)
+        return
+      }
+
+      if (isDragging.current && !isLongPress) {
+        const dragDx = e.clientX - dragStartX.current
+        container.scrollLeft = scrollStartX.current - dragDx
+      }
+    }
+
+    const handlePointerUp = () => {
+      isPointerDown.current = false
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current)
+        longPressTimeout.current = null
+      }
+      setIsLongPress(false)
+      setPointerX(null)
+
+      isDragging.current = false
+    }
+
+    const updatePointerX = (e: PointerEvent) => {
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      if (!canvas || !container) return
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const relativeToCanvas = (e.clientX - rect.left) * scaleX
+
+      const clampedX = Math.max(chartPaddingX, Math.min(canvas.width - chartPaddingX, relativeToCanvas))
+
+      setPointerX(clampedX)
+    }
+
+    canvas.addEventListener("pointerdown", handlePointerDown)
+    canvas.addEventListener("pointermove", handlePointerMove)
+    canvas.addEventListener("pointerup", handlePointerUp)
+    canvas.addEventListener("pointerleave", handlePointerUp)
+
+    container.addEventListener("wheel", handleWheel, { passive: false })
+    container.addEventListener("touchmove", handleTouchMove, { passive: false })
+
+    return () => {
+      canvas.removeEventListener("pointerdown", handlePointerDown)
+      canvas.removeEventListener("pointermove", handlePointerMove)
+      canvas.removeEventListener("pointerup", handlePointerUp)
+      canvas.removeEventListener("pointerleave", handlePointerUp)
+      container.removeEventListener("wheel", handleWheel)
+      container.removeEventListener("touchmove", handleTouchMove)
+    }
+  }, [isLongPress])
 
   const getVisibilityState = useCallback(
     (seriesKey: SeriesKey) => {
@@ -47,7 +156,9 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
         temperature2m: Math.round(weatherHourly.temperature2m[i]),
         windSpeed10m: Math.round(weatherHourly.windSpeed10m[i]),
         windDirection10m: Math.round(weatherHourly.windDirection10m[i]),
-        precipitationProbability: weatherHourly.precipitationProbability[i]
+        precipitationProbability: weatherHourly.precipitationProbability[i],
+        relativeHumidity2m: weatherHourly.relativeHumidity2m[i],
+        weatherCode: weatherHourly.weatherCode[i]
       })
     }
 
@@ -72,7 +183,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     if (totalTimespan <= 0) return 0
 
-    const chartWidth = canvasRef.current.width - 80
+    const chartWidth = canvasRef.current.width - chartPaddingX * 2
     if (chartWidth <= 0) return 0
 
     return totalTimespan / chartWidth
@@ -88,7 +199,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     // Set dimensions - make it wider for scrolling
     // Each hour gets more space since we're only viewing 24 hours at a time
-    const width = Math.max(2000, allHours.length * 30) // Each data point gets 30px width
+    const width = Math.max(2000, allHours.length * chartWidthPerHour) // Each data point gets 30px width
     const height = canvas.height
     canvas.width = width
 
@@ -223,18 +334,20 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       // Draw "NOW" label
       ctx.fillStyle = "#FFFFFF"
       ctx.font = "bold 16px Arial"
-      ctx.textAlign = "center"
+      ctx.textAlign = "right"
       ctx.textBaseline = "top"
 
       const target = DateTime.now().setZone(timezone || "local")
-      const targetHour = target.toFormat("HH:mm")
+      const targetHour = target.toFormat("h:mm") + target.toFormat("a").toLowerCase()
       const targetOffset = target.toFormat("Z")
 
       const local = DateTime.now().setZone("local")
-      const localHour = local.toFormat("HH:mm")
+      const localHour = local.toFormat("h:mm") + local.toFormat("a")
       const localOffset = local.toFormat("Z")
 
-      ctx.fillText(`${targetHour} ${targetOffset} UTC    (${localHour} ${localOffset} UTC)`, currentX + 5, height - chartPaddingBottom + 5)
+      ctx.fillText(`${targetHour} ${targetOffset}`, currentX - 10, height - chartPaddingBottom + 5)
+      ctx.textAlign = "left"
+      ctx.fillText(`(${localHour} ${localOffset})`, currentX + 10, height - chartPaddingBottom + 5)
 
       // Draw circle at the top of the line
       ctx.beginPath()
@@ -429,11 +542,33 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       if (index % 1 === 0) {
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
         const y = height
-        const adjustedHour = point.time.hour
-        ctx.fillText(adjustedHour.toString().padStart(2, "0"), x, y)
+        const adjustedHour = point.time.toFormat("h")
+        const meridiem = adjustedHour === "12" || adjustedHour === "6" ? point.time.toFormat("a").toLowerCase() : ""
+        ctx.fillText(adjustedHour + meridiem, x, y)
       }
     })
-  }, [allHours, getVisibilityState, currentHourIndex, timezone, calculateTimePerPixel])
+
+    if (isLongPress && pointerX !== null) {
+      const hourIndex = Math.floor(((pointerX - chartPaddingX) / chartWidth) * (allHours.length - 1))
+      // Vertical line
+      ctx.strokeStyle = "white"
+      ctx.beginPath()
+      ctx.moveTo(pointerX, 0)
+      ctx.lineTo(pointerX, canvas.height)
+      ctx.stroke()
+
+      // Info bubble box
+      ctx.fillStyle = "#111827"
+      ctx.fillRect(pointerX - chartPaddingX, canvas.height / 2 - canvas.height / 6, chartPaddingX * 2, canvas.height / 3)
+
+      ctx.fillStyle = "white"
+      ctx.font = "12px sans-serif"
+      ctx.textBaseline = "middle"
+      ctx.fillText(allHours[hourIndex].time.toFormat("h:mm a"), pointerX, canvas.height / 2 - 20)
+      ctx.fillText(`H: ${allHours[hourIndex].relativeHumidity2m.toFixed(0)}%`, pointerX, canvas.height / 2)
+      ctx.fillText(getWeatherDescription(allHours[hourIndex].weatherCode), pointerX, canvas.height / 2 + 20)
+    }
+  }, [allHours, currentHourIndex, getVisibilityState, isLongPress, pointerX, timezone, calculateTimePerPixel])
 
   useEffect(() => {
     drawChart()
@@ -482,7 +617,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     const containerWidth = container.clientWidth
     const maxScrollLeft = container.scrollWidth - containerWidth
-    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - containerWidth / 8))
+    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - (containerWidth - chartPaddingX) / 2))
 
     container.scrollLeft = targetScrollPosition
     setInitialScrollDone(true)
@@ -492,7 +627,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     <div className="relative mt-1">
       <div
         ref={containerRef}
-        className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto scrollbar scrollbar-h-4 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+        className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
       >
         <canvas ref={canvasRef} height={250} className="h-full" />
       </div>

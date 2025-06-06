@@ -58,7 +58,7 @@ export async function fetchWeatherData(
         "sunrise",
         "sunset"
       ],
-      "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation_probability"],
+      "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation_probability", "relative_humidity_2m", "weather_code"],
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "timezone": locationData.timezone,
       "past_days": 7,
@@ -102,7 +102,9 @@ export async function fetchWeatherData(
         temperature2m: hourly.variables(0)!.valuesArray()!,
         windSpeed10m: hourly.variables(1)!.valuesArray()!,
         windDirection10m: hourly.variables(2)!.valuesArray()!,
-        precipitationProbability: hourly.variables(3)!.valuesArray()!
+        precipitationProbability: hourly.variables(3)!.valuesArray()!,
+        relativeHumidity2m: hourly.variables(4)!.valuesArray()!,
+        weatherCode: hourly.variables(5)!.valuesArray()!
       },
       daily: {
         time: [...Array((Number(daily.timeEnd()) - Number(daily.time())) / daily.interval())].map((_, i) =>

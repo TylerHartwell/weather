@@ -30,6 +30,8 @@ export interface WeatherHourly {
   windSpeed10m: Float32Array
   windDirection10m: Float32Array
   precipitationProbability: Float32Array
+  relativeHumidity2m: Float32Array
+  weatherCode: Float32Array
 }
 
 export type WeatherHour = {
