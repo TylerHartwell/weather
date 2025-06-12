@@ -25,7 +25,6 @@ export function useWeatherData() {
       setWeatherData(data)
     } catch (err) {
       setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-      console.error("Error fetching weather data:", err)
     } finally {
       setIsLoading(false)
     }

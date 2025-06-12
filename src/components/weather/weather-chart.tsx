@@ -29,7 +29,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   const isPointerDown = useRef(false)
 
   const chartPaddingX = 40
-  const chartPaddingBottom = 40
+  const chartPaddingBottom = 50
   const chartPaddingTop = 80
   const chartWidthPerHour = 30
 
@@ -334,7 +334,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       // Draw "NOW" label
       ctx.fillStyle = "#FFFFFF"
       ctx.font = "bold 16px Arial"
-      ctx.textAlign = "right"
+      ctx.textAlign = "center"
       ctx.textBaseline = "top"
 
       const target = DateTime.now().setZone(timezone || "local")
@@ -342,12 +342,12 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const targetOffset = target.toFormat("Z")
 
       const local = DateTime.now().setZone("local")
-      const localHour = local.toFormat("h:mm") + local.toFormat("a")
+      const localHour = local.toFormat("h:mm") + local.toFormat("a").toLowerCase()
       const localOffset = local.toFormat("Z")
 
-      ctx.fillText(`${targetHour} ${targetOffset}`, currentX - 10, height - chartPaddingBottom + 5)
-      ctx.textAlign = "left"
-      ctx.fillText(`(${localHour} ${localOffset})`, currentX + 10, height - chartPaddingBottom + 5)
+      const currentTimeText = `${targetHour} ${targetOffset} ${target.hour === local.hour ? "" : `(${localHour} ${localOffset})`}`
+
+      ctx.fillText(currentTimeText, currentX, height - chartPaddingBottom + 15)
 
       // Draw circle at the top of the line
       ctx.beginPath()
@@ -539,11 +539,12 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     ctx.textAlign = "center"
     ctx.textBaseline = "bottom"
     allHours.forEach((point, index) => {
-      if (index % 1 === 0) {
+      if (index % 2 === 0) {
         const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
         const y = height
         const adjustedHour = point.time.toFormat("h")
-        const meridiem = adjustedHour === "12" || adjustedHour === "6" ? point.time.toFormat("a").toLowerCase() : ""
+        const meridiem = point.time.toFormat("a").toLowerCase()
+        // const meridiem = adjustedHour === "12" || adjustedHour === "6" ? point.time.toFormat("a").toLowerCase() : ""
         ctx.fillText(adjustedHour + meridiem, x, y)
       }
     })

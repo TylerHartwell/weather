@@ -31,6 +31,12 @@ export default function WeatherDashboard() {
     handleFetchWeather()
   }, [handleFetchWeather])
 
+  useEffect(() => {
+    if (error) {
+      console.log(error.message)
+    }
+  }, [error])
+
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
   }, [])
@@ -50,26 +56,29 @@ export default function WeatherDashboard() {
 
   const handleSearch = useCallback(
     (query: string) => {
-      setLocation(query)
-      handleFetchWeather()
+      if (query !== location) {
+        setLocation(query)
+        handleFetchWeather()
+      }
     },
-    [handleFetchWeather]
+    [handleFetchWeather, location]
   )
 
-  if (isLoading) {
+  if (isLoading && !weatherData) {
     return <LoadingState />
   }
 
-  if (error) {
-    return <ErrorState message={error.message} onRetry={() => resetWeatherData} />
-  }
-
   if (!weatherData) {
-    return <ErrorState message="No weather data available" onRetry={() => resetWeatherData} />
+    return (
+      <ErrorState
+        message="No weather data available"
+        onRetry={() => resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })}
+      />
+    )
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center relative">
       <Card className="w-full  bg-gray-900 border-gray-800 text-white py-2">
         <CardContent>
           <div className="flex flex-col space-y-2">
@@ -96,7 +105,7 @@ export default function WeatherDashboard() {
               selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
             />
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
           </div>
         </CardContent>
       </Card>

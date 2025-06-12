@@ -25,14 +25,7 @@ async function getCoordinates(location: string) {
       timezone: data.results[0].timezone || "auto"
     }
   } catch (error) {
-    console.error("Error getting coordinates:", error)
-    return {
-      country: "United States",
-      latitude: 40.71427,
-      longitude: -74.00597,
-      name: "New York",
-      timezone: "America/New_York"
-    }
+    throw error
   }
 }
 
@@ -135,7 +128,6 @@ export async function fetchWeatherData(
 
     return weatherData
   } catch (error) {
-    console.error("Error fetching weather data:", error)
     throw error
   }
 }

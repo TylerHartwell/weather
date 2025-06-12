@@ -8,16 +8,17 @@ import { Search } from "lucide-react"
 
 interface SearchBarProps {
   onSearch: (query: string) => void
-  initialQuery?: string
+  isLoading: boolean
 }
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
+export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       onSearch(searchQuery)
+      setSearchQuery("")
     }
   }
 
@@ -35,7 +36,7 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
           className="bg-gray-800 border-gray-700"
         />
         <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-          <Search className="h-4 w-4" />
+          <Search className={`h-4 w-4 rounded-full ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </div>
     </form>
