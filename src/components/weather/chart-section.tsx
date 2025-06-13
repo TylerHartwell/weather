@@ -7,7 +7,7 @@ import ChartControls from "./chart-controls"
 
 interface ChartSectionProps {
   weatherHourly: WeatherHourly
-  selectedTimestamp?: number | null
+  selectedTimestamp: number | null
   timezone: string | null
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
