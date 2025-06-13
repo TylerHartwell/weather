@@ -8,7 +8,7 @@ import { getWeatherDescription } from "@/lib/weather-utils"
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
-  selectedTimestamp?: number | null
+  selectedTimestamp: number | null
   containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries: VisibleSeries
   timezone: string | null
@@ -579,31 +579,31 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   useEffect(() => {
     const container = containerRef.current
     const canvas = canvasRef.current
-    if (selectedTimestamp && container && canvas && allHours.length > 0) {
-      const selectedDate = DateTime.fromMillis(selectedTimestamp)
-        .setZone(timezone || "local")
-        .startOf("day")
+    if (selectedTimestamp === null || !container || !canvas || allHours.length <= 1) return
 
-      const dayStart = selectedDate.toMillis()
+    const selectedDate = DateTime.fromMillis(selectedTimestamp)
+      .setZone(timezone || "local")
+      .startOf("day")
 
-      const dayMiddle = dayStart + 12 * 60 * 60 * 1000
+    const dayStart = selectedDate.toMillis()
 
-      const startTimestamp = allHours[0].time.toMillis()
-      const endTimestamp = allHours[allHours.length - 1].time.toMillis()
-      const totalTimespan = endTimestamp - startTimestamp
-      const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
-      const pixelOffset = chartPaddingX + ((dayMiddle - startTimestamp) / totalTimespan) * chartWidth
+    const dayMiddle = dayStart + 12 * 60 * 60 * 1000
 
-      const containerWidth = container.clientWidth
-      const maxScrollLeft = container.scrollWidth - containerWidth
-      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, pixelOffset - containerWidth / 2))
+    const startTimestamp = allHours[0].time.toMillis()
+    const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+    const totalTimespan = endTimestamp - startTimestamp
+    const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
+    const pixelOffset = chartPaddingX + ((dayMiddle - startTimestamp) / totalTimespan) * chartWidth
 
-      // Use smooth scrolling
-      container.scrollTo({
-        left: targetScrollPosition,
-        behavior: "smooth"
-      })
-    }
+    const containerWidth = container.clientWidth
+    const maxScrollLeft = container.scrollWidth - containerWidth
+    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, pixelOffset - containerWidth / 2))
+
+    // Use smooth scrolling
+    container.scrollTo({
+      left: targetScrollPosition,
+      behavior: "smooth"
+    })
   }, [selectedTimestamp, allHours, timezone])
 
   // Auto-scroll to current time on initial render
@@ -625,7 +625,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
   }, [currentHourIndex, allHours, initialScrollDone])
 
   return (
-    <div className="relative mt-1">
+    <div className="relative mt-1 mb-1">
       <div
         ref={containerRef}
         className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"

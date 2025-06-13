@@ -13,6 +13,7 @@ import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
+import { Watch } from "lucide-react"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
@@ -63,6 +64,9 @@ export default function WeatherDashboard() {
     },
     [handleFetchWeather, location]
   )
+  const jumpToNow = useCallback(() => {
+    setSelectedTimestamp(Date.now())
+  }, [])
 
   if (isLoading && !weatherData) {
     return <LoadingState />
@@ -78,10 +82,10 @@ export default function WeatherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center relative">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Card className="w-full  bg-gray-900 border-gray-800 text-white py-2">
         <CardContent>
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col">
             <CurrentWeather
               weatherCurrent={weatherData.current}
               toggleTempUnit={toggleTempUnit}
@@ -99,6 +103,12 @@ export default function WeatherDashboard() {
               temperatureUnit={temperatureUnit}
               windSpeedUnit={windSpeedUnit}
             />
+            <div className="flex justify-center">
+              <button onClick={jumpToNow} className="bg-blue-600 hover:bg-blue-700 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer">
+                <Watch className="h-full w-full" />
+              </button>
+            </div>
+
             <WeekdaySection
               weatherDaily={weatherData.daily}
               onDayClick={handleDayClick}

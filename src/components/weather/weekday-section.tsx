@@ -74,8 +74,8 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
   }, [])
 
   return (
-    <div>
-      <h3 className="text-lg font-medium">Weekday Summary</h3>
+    <div className="relative mb-2">
+      <h3 className="text-lg font-medium hidden 2xs:inline absolute top-0 -translate-y-full">Weekday Summary</h3>
       <div className="relative flex justify-center">
         <div
           ref={scrollRef}

@@ -47,7 +47,7 @@ export default function SeriesControl({ seriesKey, visibleSeries, temperatureUni
           variant={!series.hidden ? "secondary" : "destructive"}
           size="sm"
           onClick={() => onHideToggle(seriesKey)}
-          className="h-8 w-8 text-xs opacity-90"
+          className="h-8 w-8 text-xs opacity-90 cursor-pointer"
         >
           <EyeOff className="h-2 w-2" />
         </Button>
@@ -56,7 +56,7 @@ export default function SeriesControl({ seriesKey, visibleSeries, temperatureUni
           variant={!series.solo ? "secondary" : "destructive"}
           size="sm"
           onClick={() => onSoloToggle(seriesKey)}
-          className="h-8 w-8 text-xs opacity-90"
+          className="h-8 w-8 text-xs opacity-90 cursor-pointer"
         >
           <Target className="h-2 w-2" />
         </Button>

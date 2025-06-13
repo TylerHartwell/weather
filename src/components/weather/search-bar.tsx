@@ -29,13 +29,13 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
         <Input
           id="search-location"
           type="text"
-          placeholder="Search for a city or postal code..."
+          placeholder="Enter city or postal code..."
           value={searchQuery}
           onFocus={e => e.target.select()}
           onChange={e => setSearchQuery(e.target.value)}
           className="bg-gray-800 border-gray-700"
         />
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+        <Button type="submit" className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
           <Search className={`h-4 w-4 rounded-full ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </div>
