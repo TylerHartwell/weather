@@ -105,7 +105,7 @@ export default function WeatherDashboard() {
             />
             <div className="flex justify-center">
               <button onClick={jumpToNow} className="bg-blue-600 hover:bg-blue-700 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer">
-                <Watch className="h-full w-full" />
+                <Watch className="h-full w-full stroke-1" />
               </button>
             </div>
 
