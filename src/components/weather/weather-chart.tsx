@@ -12,12 +12,13 @@ interface WeatherChartProps {
   containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries: VisibleSeries
   timezone: string | null
+  jumpTrigger: number
 }
 
 export default function WeatherChart({ weatherHourly, selectedTimestamp, visibleSeries, timezone, ...props }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [initialScrollDone, setInitialScrollDone] = useState(false)
+  const [isInitialScroll, setIsInitialScroll] = useState(true)
   const [isLongPress, setIsLongPress] = useState(false)
   const [pointerX, setPointerX] = useState<number | null>(null)
   const longPressTimeout = useRef<number | null>(null)
@@ -575,11 +576,42 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     drawChart()
   }, [drawChart])
 
+  const scrollToPosition = useCallback(
+    ({
+      container,
+      canvas,
+      chartFraction,
+
+      smooth = true,
+      containerFractionOffset = 0.5
+    }: {
+      container: HTMLElement | null
+      canvas: HTMLElement | null
+      chartFraction: number
+
+      smooth?: boolean
+      containerFractionOffset?: number
+    }) => {
+      if (!container || !canvas) return
+      const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
+      const containerWidth = container.clientWidth
+      const maxScrollLeft = container.scrollWidth - containerWidth
+      const targetX = chartPaddingX + chartFraction * chartWidth
+      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, targetX - containerWidth * containerFractionOffset))
+      console.log({ chartWidth, containerWidth, maxScrollLeft, targetX, targetScrollPosition })
+
+      container.scrollTo({
+        left: targetScrollPosition,
+        behavior: smooth ? "smooth" : "instant"
+      })
+    },
+    [chartPaddingX]
+  )
+
   // Handle scrolling to a specific timestamp with smooth animation
   useEffect(() => {
-    const container = containerRef.current
-    const canvas = canvasRef.current
-    if (selectedTimestamp === null || !container || !canvas || allHours.length <= 1) return
+    if (selectedTimestamp === null || allHours.length <= 1 || isInitialScroll) return
+    console.log("sub")
 
     const selectedDate = DateTime.fromMillis(selectedTimestamp)
       .setZone(timezone || "local")
@@ -591,38 +623,38 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     const startTimestamp = allHours[0].time.toMillis()
     const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+
     const totalTimespan = endTimestamp - startTimestamp
-    const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
-    const pixelOffset = chartPaddingX + ((dayMiddle - startTimestamp) / totalTimespan) * chartWidth
 
-    const containerWidth = container.clientWidth
-    const maxScrollLeft = container.scrollWidth - containerWidth
-    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, pixelOffset - containerWidth / 2))
+    const chartFraction = (dayMiddle - startTimestamp) / totalTimespan
 
-    // Use smooth scrolling
-    container.scrollTo({
-      left: targetScrollPosition,
-      behavior: "smooth"
+    scrollToPosition({
+      container: containerRef.current,
+      canvas: canvasRef.current,
+      chartFraction: chartFraction
     })
-  }, [selectedTimestamp, allHours, timezone])
+  }, [selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
-    const container = containerRef.current
+    if (!isInitialScroll || currentHourIndex < 0 || allHours.length <= 1) return
+    if (!canvasRef.current || !containerRef.current) return
+    console.log("waiting for canvas resize")
+
     const canvas = canvasRef.current
+    const container = containerRef.current
 
-    if (!container || !canvas || initialScrollDone || currentHourIndex < 0 || allHours.length <= 1) return
+    const chartFraction = currentHourIndex / (allHours.length - 1)
 
-    const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
-    const currentX = chartPaddingX + (currentHourIndex / (allHours.length - 1)) * chartWidth
+    scrollToPosition({
+      container,
+      canvas,
+      chartFraction,
+      smooth: false
+    })
 
-    const containerWidth = container.clientWidth
-    const maxScrollLeft = container.scrollWidth - containerWidth
-    const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, currentX - (containerWidth - chartPaddingX) / 2))
-
-    container.scrollLeft = targetScrollPosition
-    setInitialScrollDone(true)
-  }, [currentHourIndex, allHours, initialScrollDone])
+    setIsInitialScroll(false)
+  }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition])
 
   return (
     <div className="relative mt-1 mb-1">

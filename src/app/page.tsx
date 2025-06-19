@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { useWeatherData } from "@/hooks/use-weather-data"
 
 import CurrentWeather from "@/components/weather/current-weather"
@@ -21,6 +21,7 @@ export default function WeatherDashboard() {
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
+  const [jumpTrigger, setJumpTrigger] = useState(0)
 
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
 
@@ -65,6 +66,7 @@ export default function WeatherDashboard() {
     [handleFetchWeather, location]
   )
   const jumpToNow = useCallback(() => {
+    setJumpTrigger(prev => prev + 1)
     setSelectedTimestamp(Date.now())
   }, [])
 
@@ -84,7 +86,7 @@ export default function WeatherDashboard() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Card className="w-full  bg-gray-900 border-gray-800 text-white py-2">
-        <CardContent>
+        <div className="px-4">
           <div className="flex flex-col">
             <CurrentWeather
               weatherCurrent={weatherData.current}
@@ -102,6 +104,7 @@ export default function WeatherDashboard() {
               timezone={weatherData.timezone}
               temperatureUnit={temperatureUnit}
               windSpeedUnit={windSpeedUnit}
+              jumpTrigger={jumpTrigger}
             />
             <div className="flex justify-center">
               <button onClick={jumpToNow} className="bg-blue-600 hover:bg-blue-700 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer">
@@ -117,7 +120,7 @@ export default function WeatherDashboard() {
             />
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   )
