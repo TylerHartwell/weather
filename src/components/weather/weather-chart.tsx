@@ -200,7 +200,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     // Set dimensions - make it wider for scrolling
     // Each hour gets more space since we're only viewing 24 hours at a time
-    const width = Math.max(2000, allHours.length * chartWidthPerHour) // Each data point gets 30px width
+    const width = Math.max(2000, (allHours.length - 1) * chartWidthPerHour) // Each data point gets 30px width
     const height = canvas.height
     canvas.width = width
 
@@ -366,7 +366,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const previousLineWidth = ctx.lineWidth
       const previousShadowBlur = ctx.shadowBlur
 
-      ctx.textAlign = "left"
+      ctx.textAlign = "center"
       ctx.textBaseline = "bottom"
       ctx.strokeStyle = "#60A5FA"
       ctx.lineWidth = 1
@@ -588,18 +588,25 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       container: HTMLElement | null
       canvas: HTMLElement | null
       chartFraction: number
-
       smooth?: boolean
       containerFractionOffset?: number
     }) => {
       if (!container || !canvas) return
-      const chartWidth = canvas.getBoundingClientRect().width - chartPaddingX * 2
-      const containerWidth = container.clientWidth
+      const chartWidth = canvas.scrollWidth - chartPaddingX * 2
+      const containerWidth = container.offsetWidth
       const maxScrollLeft = container.scrollWidth - containerWidth
-      const targetX = chartPaddingX + chartFraction * chartWidth
-      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, targetX - containerWidth * containerFractionOffset))
-      console.log({ chartWidth, containerWidth, maxScrollLeft, targetX, targetScrollPosition })
+      const chartTargetX = chartFraction * chartWidth
+      const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, chartTargetX + chartPaddingX - containerWidth * containerFractionOffset))
 
+      console.log({
+        chartWidth,
+        containerWidth,
+        scrollWidth: container.scrollWidth,
+        maxScrollLeft,
+        chartTargetX,
+        targetScrollPosition,
+        chartPaddingX
+      })
       container.scrollTo({
         left: targetScrollPosition,
         behavior: smooth ? "smooth" : "instant"
@@ -625,8 +632,9 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const endTimestamp = allHours[allHours.length - 1].time.toMillis()
 
     const totalTimespan = endTimestamp - startTimestamp
+    const targetTimeSpan = dayMiddle - startTimestamp
 
-    const chartFraction = (dayMiddle - startTimestamp) / totalTimespan
+    const chartFraction = targetTimeSpan / totalTimespan
 
     scrollToPosition({
       container: containerRef.current,
@@ -644,23 +652,35 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const canvas = canvasRef.current
     const container = containerRef.current
 
-    const chartFraction = currentHourIndex / (allHours.length - 1)
+    const startTimestamp = allHours[0].time.toMillis()
+    const endTimestamp = allHours[allHours.length - 1].time.toMillis()
 
-    scrollToPosition({
-      container,
-      canvas,
-      chartFraction,
-      smooth: false
+    const totalTimespan = endTimestamp - startTimestamp
+    const targetTimeSpan =
+      DateTime.now()
+        .setZone(timezone || "local")
+        .toMillis() - startTimestamp
+
+    const chartFraction = targetTimeSpan / totalTimespan
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        scrollToPosition({
+          container,
+          canvas,
+          chartFraction,
+          smooth: false
+        })
+        setIsInitialScroll(false)
+      }, 0)
     })
-
-    setIsInitialScroll(false)
-  }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition])
+  }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition, timezone])
 
   return (
     <div className="relative mt-1 mb-1">
       <div
         ref={containerRef}
-        className="w-full h-60 bg-gray-800 rounded-md overflow-x-auto scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+        className="w-full h-60 bg-green-800 rounded-md overflow-x-auto scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
       >
         <canvas ref={canvasRef} height={250} className="h-full" />
       </div>
