@@ -14,6 +14,7 @@ import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
+// import { DateTime } from "luxon"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
@@ -67,7 +68,7 @@ export default function WeatherDashboard() {
   )
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)
-    setSelectedTimestamp(Date.now())
+    // setSelectedTimestamp(DateTime.now().toMillis())
   }, [])
 
   if (isLoading && !weatherData) {

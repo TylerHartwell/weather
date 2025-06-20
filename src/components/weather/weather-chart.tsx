@@ -15,7 +15,7 @@ interface WeatherChartProps {
   jumpTrigger: number
 }
 
-export default function WeatherChart({ weatherHourly, selectedTimestamp, visibleSeries, timezone, ...props }: WeatherChartProps) {
+export default function WeatherChart({ weatherHourly, selectedTimestamp, visibleSeries, timezone, jumpTrigger, ...props }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isInitialScroll, setIsInitialScroll] = useState(true)
@@ -598,15 +598,6 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
       const chartTargetX = chartFraction * chartWidth
       const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, chartTargetX + chartPaddingX - containerWidth * containerFractionOffset))
 
-      console.log({
-        chartWidth,
-        containerWidth,
-        scrollWidth: container.scrollWidth,
-        maxScrollLeft,
-        chartTargetX,
-        targetScrollPosition,
-        chartPaddingX
-      })
       container.scrollTo({
         left: targetScrollPosition,
         behavior: smooth ? "smooth" : "instant"
@@ -614,11 +605,47 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     },
     [chartPaddingX]
   )
+  const handleScrollToPosition = useCallback(
+    (targetTimeStamp: number, smooth?: boolean) => {
+      if (!canvasRef.current || !containerRef.current) return
+      if (allHours.length <= 1) return
+
+      const canvas = canvasRef.current
+      const container = containerRef.current
+      const startTimestamp = allHours[0].time.toMillis()
+      const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+
+      const totalTimespan = endTimestamp - startTimestamp
+      const targetTimeSpan = targetTimeStamp - startTimestamp
+
+      const chartFraction = targetTimeSpan / totalTimespan
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToPosition({
+            container,
+            canvas,
+            chartFraction,
+            ...(smooth !== undefined ? { smooth } : {})
+          })
+        }, 0)
+      })
+    },
+    [allHours, scrollToPosition]
+  )
+
+  useEffect(() => {
+    if (jumpTrigger > 0) {
+      const targetTimeStamp = DateTime.now()
+        .setZone(timezone || "local")
+        .toMillis()
+      handleScrollToPosition(targetTimeStamp)
+    }
+  }, [jumpTrigger, timezone, handleScrollToPosition])
 
   // Handle scrolling to a specific timestamp with smooth animation
   useEffect(() => {
     if (selectedTimestamp === null || allHours.length <= 1 || isInitialScroll) return
-    console.log("sub")
 
     const selectedDate = DateTime.fromMillis(selectedTimestamp)
       .setZone(timezone || "local")
@@ -628,53 +655,24 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
 
     const dayMiddle = dayStart + 12 * 60 * 60 * 1000
 
-    const startTimestamp = allHours[0].time.toMillis()
-    const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+    const targetTimeStamp = dayMiddle
 
-    const totalTimespan = endTimestamp - startTimestamp
-    const targetTimeSpan = dayMiddle - startTimestamp
-
-    const chartFraction = targetTimeSpan / totalTimespan
-
-    scrollToPosition({
-      container: containerRef.current,
-      canvas: canvasRef.current,
-      chartFraction: chartFraction
-    })
-  }, [selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition])
+    handleScrollToPosition(targetTimeStamp)
+  }, [selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
     if (!isInitialScroll || currentHourIndex < 0 || allHours.length <= 1) return
     if (!canvasRef.current || !containerRef.current) return
-    console.log("waiting for canvas resize")
 
-    const canvas = canvasRef.current
-    const container = containerRef.current
+    const targetTimeStamp = DateTime.now()
+      .setZone(timezone || "local")
+      .toMillis()
 
-    const startTimestamp = allHours[0].time.toMillis()
-    const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+    handleScrollToPosition(targetTimeStamp, false)
 
-    const totalTimespan = endTimestamp - startTimestamp
-    const targetTimeSpan =
-      DateTime.now()
-        .setZone(timezone || "local")
-        .toMillis() - startTimestamp
-
-    const chartFraction = targetTimeSpan / totalTimespan
-
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        scrollToPosition({
-          container,
-          canvas,
-          chartFraction,
-          smooth: false
-        })
-        setIsInitialScroll(false)
-      }, 0)
-    })
-  }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition, timezone])
+    setIsInitialScroll(false)
+  }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition, timezone, handleScrollToPosition])
 
   return (
     <div className="relative mt-1 mb-1">
