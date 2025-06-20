@@ -23,6 +23,7 @@ export default function WeatherDashboard() {
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
   const [jumpTrigger, setJumpTrigger] = useState(0)
+  const [scrollTrigger, setScrollTrigger] = useState(0)
 
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
 
@@ -42,6 +43,7 @@ export default function WeatherDashboard() {
 
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
+    setScrollTrigger(prev => prev + 1)
   }, [])
 
   const toggleWindUnit = () => {
@@ -68,7 +70,6 @@ export default function WeatherDashboard() {
   )
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)
-    // setSelectedTimestamp(DateTime.now().toMillis())
   }, [])
 
   if (isLoading && !weatherData) {
@@ -106,6 +107,7 @@ export default function WeatherDashboard() {
               temperatureUnit={temperatureUnit}
               windSpeedUnit={windSpeedUnit}
               jumpTrigger={jumpTrigger}
+              scrollTrigger={scrollTrigger}
             />
             <div className="flex justify-center">
               <button onClick={jumpToNow} className="bg-blue-600 hover:bg-blue-700 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer">

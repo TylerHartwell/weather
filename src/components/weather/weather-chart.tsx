@@ -13,9 +13,18 @@ interface WeatherChartProps {
   visibleSeries: VisibleSeries
   timezone: string | null
   jumpTrigger: number
+  scrollTrigger: number
 }
 
-export default function WeatherChart({ weatherHourly, selectedTimestamp, visibleSeries, timezone, jumpTrigger, ...props }: WeatherChartProps) {
+export default function WeatherChart({
+  weatherHourly,
+  selectedTimestamp,
+  visibleSeries,
+  timezone,
+  jumpTrigger,
+  scrollTrigger,
+  ...props
+}: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isInitialScroll, setIsInitialScroll] = useState(true)
@@ -658,7 +667,7 @@ export default function WeatherChart({ weatherHourly, selectedTimestamp, visible
     const targetTimeStamp = dayMiddle
 
     handleScrollToPosition(targetTimeStamp)
-  }, [selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
+  }, [scrollTrigger, selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {

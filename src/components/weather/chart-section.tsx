@@ -12,9 +12,18 @@ interface ChartSectionProps {
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
   jumpTrigger: number
+  scrollTrigger: number
 }
 
-export default function ChartSection({ weatherHourly, selectedTimestamp, timezone, temperatureUnit, windSpeedUnit, jumpTrigger }: ChartSectionProps) {
+export default function ChartSection({
+  weatherHourly,
+  selectedTimestamp,
+  timezone,
+  temperatureUnit,
+  windSpeedUnit,
+  jumpTrigger,
+  scrollTrigger
+}: ChartSectionProps) {
   const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: false, solo: false }])) as VisibleSeries
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
   const chartContainerRef = useRef<HTMLDivElement | null>(null)
@@ -86,6 +95,7 @@ export default function ChartSection({ weatherHourly, selectedTimestamp, timezon
         visibleSeries={visibleSeries}
         timezone={timezone}
         jumpTrigger={jumpTrigger}
+        scrollTrigger={scrollTrigger}
       />
     </div>
   )
