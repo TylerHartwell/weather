@@ -38,44 +38,66 @@ export default function WeatherChart({
   const pointerDownPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const dragThreshold = 5 // px before considering it a drag
   const isPointerDown = useRef(false)
+  const canvasRectRef = useRef<DOMRect | null>(null)
 
   const chartPaddingX = 40
   const chartPaddingBottom = 50
   const chartPaddingTop = 80
   const chartWidthPerHour = 30
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const container = containerRef.current
-    if (!canvas || !container) return
-
-    const handleWheel = (e: WheelEvent) => {
+  const handleWheel = useCallback(
+    (e: WheelEvent) => {
       if (isLongPress) {
         e.preventDefault() // block horizontal scroll via wheel
       }
-    }
+    },
+    [isLongPress]
+  )
 
-    const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
       if (isLongPress) {
         e.preventDefault() // block touch-driven horizontal scroll
       }
+    },
+    [isLongPress]
+  )
+
+  const updatePointerPos = (e: PointerEvent) => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    const rect = canvasRectRef.current
+    if (!canvas || !container || !rect) return
+
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const relativeToCanvasX = (e.clientX - rect.left) * scaleX
+    const relativeToCanvasY = (e.clientY - rect.top) * scaleY
+
+    const clampedX = Math.max(chartPaddingX, Math.min(canvas.width - chartPaddingX, relativeToCanvasX))
+    const clampedY = Math.max(0, Math.min(canvas.height, relativeToCanvasY))
+
+    setPointerX(clampedX)
+    setPointerY(clampedY)
+  }
+
+  const handlePointerUp = () => {
+    isPointerDown.current = false
+    if (longPressTimeout.current) {
+      clearTimeout(longPressTimeout.current)
+      longPressTimeout.current = null
     }
+    setIsLongPress(false)
+    setPointerX(null)
+    setPointerY(null)
 
-    const handlePointerDown = (e: PointerEvent) => {
-      isPointerDown.current = true
-      pointerDownPos.current = { x: e.clientX, y: e.clientY }
+    isDragging.current = false
+  }
 
-      longPressTimeout.current = window.setTimeout(() => {
-        setIsLongPress(true)
-        updatePointerPos(e)
-        console.log(e.layerY)
-      }, 150)
-
-      dragStartX.current = e.clientX
-      scrollStartX.current = container.scrollLeft
-    }
-
-    const handlePointerMove = (e: PointerEvent) => {
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      const container = containerRef.current
+      if (!container) return
       if (!isPointerDown.current) return
       // Cancel long-press if pointer has moved beyond threshold
       const dx = Math.abs(e.clientX - pointerDownPos.current.x)
@@ -98,37 +120,33 @@ export default function WeatherChart({
         const dragDx = e.clientX - dragStartX.current
         container.scrollLeft = scrollStartX.current - dragDx
       }
-    }
+    },
+    [isLongPress]
+  )
 
-    const handlePointerUp = () => {
-      isPointerDown.current = false
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current)
-        longPressTimeout.current = null
-      }
-      setIsLongPress(false)
-      setPointerX(null)
-      setPointerY(null)
+  const handlePointerDown = useCallback((e: PointerEvent) => {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
 
-      isDragging.current = false
-    }
+    isPointerDown.current = true
+    pointerDownPos.current = { x: e.clientX, y: e.clientY }
 
-    const updatePointerPos = (e: PointerEvent) => {
-      const canvas = canvasRef.current
-      const container = containerRef.current
-      if (!canvas || !container) return
-      const rect = canvas.getBoundingClientRect()
-      const scaleX = canvas.width / rect.width
-      const scaleY = canvas.height / rect.height
-      const relativeToCanvasX = (e.clientX - rect.left) * scaleX
-      const relativeToCanvasY = (e.clientY - rect.top) * scaleY
+    longPressTimeout.current = window.setTimeout(() => {
+      setIsLongPress(true)
+      canvasRectRef.current = canvas.getBoundingClientRect()
+      updatePointerPos(e)
+      console.log(e.layerY)
+    }, 150)
 
-      const clampedX = Math.max(chartPaddingX, Math.min(canvas.width - chartPaddingX, relativeToCanvasX))
-      const clampedY = Math.max(0, Math.min(canvas.height, relativeToCanvasY))
+    dragStartX.current = e.clientX
+    scrollStartX.current = container.scrollLeft
+  }, [])
 
-      setPointerX(clampedX)
-      setPointerY(clampedY)
-    }
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+    if (!canvas || !container) return
 
     canvas.addEventListener("pointerdown", handlePointerDown)
     canvas.addEventListener("pointermove", handlePointerMove)
@@ -146,7 +164,7 @@ export default function WeatherChart({
       container.removeEventListener("wheel", handleWheel)
       container.removeEventListener("touchmove", handleTouchMove)
     }
-  }, [isLongPress])
+  }, [handlePointerDown, handlePointerMove, handleTouchMove, handleWheel, isLongPress])
 
   const getVisibilityState = useCallback(
     (seriesKey: SeriesKey) => {
@@ -578,7 +596,7 @@ export default function WeatherChart({
       // Info bubble box
       const bubbleWidth = chartPaddingX * 2 //scale with padding so it is always fully on the chart
       const bubbleHeight = canvas.height / 3
-      const offset = 30
+      const offset = 40
 
       let bubbleY
       if (pointerY < canvas.height / 2) {
