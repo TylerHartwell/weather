@@ -21,8 +21,10 @@ async function getCoordinates(location: string) {
       latitude: data.results[0].latitude,
       longitude: data.results[0].longitude,
       name: data.results[0].name,
-      country: data.results[0].country,
-      timezone: data.results[0].timezone || "auto"
+      countryCode: data.results[0].country_code,
+      timezone: data.results[0].timezone || "auto",
+      admin1: data.results[0].admin1,
+      postcodes: data.results[0].postcodes ?? []
     }
   } catch (error) {
     throw error
@@ -63,7 +65,7 @@ export async function fetchWeatherData(
     const url = "https://api.open-meteo.com/v1/forecast"
 
     const responses = await fetchWeatherApi(url, params)
-    // console.log("API CALLED")
+    console.log("API CALLED")
 
     const response = responses[0]
 
@@ -123,7 +125,11 @@ export async function fetchWeatherData(
       windSpeedUnit,
       temperatureUnit,
       precipitationUnit,
-      locationName: locationData.name
+      locationName: locationData.name,
+      countryCode: locationData.countryCode,
+
+      admin1: locationData.admin1,
+      postcodes: locationData.postcodes
     }
 
     return weatherData

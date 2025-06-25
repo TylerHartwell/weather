@@ -12,6 +12,10 @@ interface CurrentWeatherProps {
   windSpeedUnit: WindSpeedUnit
   precipitationUnit: PrecipitationUnit
   locationName: string
+  countryCode: string
+
+  admin1: string
+  postcodes: string[]
 }
 
 export default function CurrentWeather({
@@ -22,7 +26,10 @@ export default function CurrentWeather({
   temperatureUnit,
   windSpeedUnit,
   precipitationUnit,
-  locationName
+  locationName,
+  admin1,
+  // postcodes,
+  countryCode
 }: CurrentWeatherProps) {
   return (
     <div className="mb-0">
@@ -30,7 +37,11 @@ export default function CurrentWeather({
         Current Weather
         <div className="flex items-center">
           <span className="text-sm text-gray-400 font-normal">Results for</span>
-          <CardTitle className="ml-2 text-base font-medium">{locationName}</CardTitle>
+          <CardTitle className="ml-2 text-base font-medium">
+            <span>{locationName}, </span>
+            <span>{countryCode === "US" ? admin1 : countryCode} </span>
+            {/* <span>{countryCode === "US" ? admin1 + " " + postcodes[0] : countryCode} </span> */}
+          </CardTitle>
         </div>
       </div>
       <div className="flex justify-between items-center h-20">

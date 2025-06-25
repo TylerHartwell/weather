@@ -12,6 +12,9 @@ export interface WeatherData {
   temperatureUnit: TemperatureUnit
   precipitationUnit: PrecipitationUnit
   locationName: string
+  countryCode: string
+  admin1: string
+  postcodes: string[]
 }
 
 export interface WeatherCurrent {

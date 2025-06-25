@@ -14,7 +14,6 @@ import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
-// import { DateTime } from "luxon"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState("San Diego")
@@ -99,6 +98,9 @@ export default function WeatherDashboard() {
               windSpeedUnit={windSpeedUnit}
               precipitationUnit={precipitationUnit}
               locationName={weatherData.locationName}
+              countryCode={weatherData.countryCode}
+              admin1={weatherData.admin1}
+              postcodes={weatherData.postcodes}
             />
             <ChartSection
               weatherHourly={weatherData.hourly}
@@ -111,7 +113,10 @@ export default function WeatherDashboard() {
             />
             <div className="flex justify-center">
               <button
-                onClick={jumpToNow}
+                onClick={e => {
+                  jumpToNow()
+                  e.currentTarget.blur()
+                }}
                 className="bg-blue-800 hover:bg-blue-900 active:bg-blue-900 text-gray-100 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer"
               >
                 <Watch className="h-full w-full stroke-1" />
