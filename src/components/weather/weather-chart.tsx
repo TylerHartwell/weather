@@ -30,6 +30,7 @@ export default function WeatherChart({
   const [isInitialScroll, setIsInitialScroll] = useState(true)
   const [isLongPress, setIsLongPress] = useState(false)
   const [pointerX, setPointerX] = useState<number | null>(null)
+  const [pointerY, setPointerY] = useState<number | null>(null)
   const longPressTimeout = useRef<number | null>(null)
   const isDragging = useRef(false)
   const dragStartX = useRef(0)
@@ -66,8 +67,9 @@ export default function WeatherChart({
 
       longPressTimeout.current = window.setTimeout(() => {
         setIsLongPress(true)
-        updatePointerX(e)
-      }, 200) // 500ms for long press
+        updatePointerPos(e)
+        console.log(e.layerY)
+      }, 150)
 
       dragStartX.current = e.clientX
       scrollStartX.current = container.scrollLeft
@@ -88,7 +90,7 @@ export default function WeatherChart({
         }
       }
       if (isLongPress) {
-        updatePointerX(e)
+        updatePointerPos(e)
         return
       }
 
@@ -106,21 +108,26 @@ export default function WeatherChart({
       }
       setIsLongPress(false)
       setPointerX(null)
+      setPointerY(null)
 
       isDragging.current = false
     }
 
-    const updatePointerX = (e: PointerEvent) => {
+    const updatePointerPos = (e: PointerEvent) => {
       const canvas = canvasRef.current
       const container = containerRef.current
       if (!canvas || !container) return
       const rect = canvas.getBoundingClientRect()
       const scaleX = canvas.width / rect.width
-      const relativeToCanvas = (e.clientX - rect.left) * scaleX
+      const scaleY = canvas.height / rect.height
+      const relativeToCanvasX = (e.clientX - rect.left) * scaleX
+      const relativeToCanvasY = (e.clientY - rect.top) * scaleY
 
-      const clampedX = Math.max(chartPaddingX, Math.min(canvas.width - chartPaddingX, relativeToCanvas))
+      const clampedX = Math.max(chartPaddingX, Math.min(canvas.width - chartPaddingX, relativeToCanvasX))
+      const clampedY = Math.max(0, Math.min(canvas.height, relativeToCanvasY))
 
       setPointerX(clampedX)
+      setPointerY(clampedY)
     }
 
     canvas.addEventListener("pointerdown", handlePointerDown)
@@ -559,7 +566,7 @@ export default function WeatherChart({
       }
     })
 
-    if (isLongPress && pointerX !== null) {
+    if (isLongPress && pointerX !== null && pointerY !== null) {
       const hourIndex = Math.floor(((pointerX - chartPaddingX) / chartWidth) * (allHours.length - 1))
       // Vertical line
       ctx.strokeStyle = "white"
@@ -569,17 +576,31 @@ export default function WeatherChart({
       ctx.stroke()
 
       // Info bubble box
-      ctx.fillStyle = "#111827"
-      ctx.fillRect(pointerX - chartPaddingX, canvas.height / 2 - canvas.height / 6, chartPaddingX * 2, canvas.height / 3)
+      const bubbleWidth = chartPaddingX * 2 //scale with padding so it is always fully on the chart
+      const bubbleHeight = canvas.height / 3
+      const offset = 30
+
+      let bubbleY
+      if (pointerY < canvas.height / 2) {
+        // Show bubble below the pointer
+        bubbleY = pointerY + offset
+      } else {
+        // Show bubble above the pointer
+        bubbleY = pointerY - bubbleHeight - offset
+      }
+      ctx.fillStyle = "#11182788"
+      ctx.fillRect(pointerX - chartPaddingX, bubbleY, bubbleWidth, bubbleHeight)
 
       ctx.fillStyle = "white"
       ctx.font = "12px sans-serif"
       ctx.textBaseline = "middle"
-      ctx.fillText(allHours[hourIndex].time.toFormat("h:mm a"), pointerX, canvas.height / 2 - 20)
-      ctx.fillText(`H: ${allHours[hourIndex].relativeHumidity2m.toFixed(0)}%`, pointerX, canvas.height / 2)
-      ctx.fillText(getWeatherDescription(allHours[hourIndex].weatherCode), pointerX, canvas.height / 2 + 20)
+      const textX = pointerX
+      const textYStart = bubbleY + bubbleHeight / 2 - 20
+      ctx.fillText(allHours[hourIndex].time.toFormat("h:mm a"), textX, textYStart)
+      ctx.fillText(`H: ${allHours[hourIndex].relativeHumidity2m.toFixed(0)}%`, textX, textYStart + 20)
+      ctx.fillText(getWeatherDescription(allHours[hourIndex].weatherCode), textX, textYStart + 40)
     }
-  }, [allHours, currentHourIndex, getVisibilityState, isLongPress, pointerX, timezone, calculateTimePerPixel])
+  }, [allHours, currentHourIndex, getVisibilityState, isLongPress, pointerX, pointerY, timezone, calculateTimePerPixel])
 
   useEffect(() => {
     drawChart()

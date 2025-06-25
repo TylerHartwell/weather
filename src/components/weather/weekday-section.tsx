@@ -2,16 +2,17 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import WeekdayCards from "./weekday-cards"
 import type { WeatherDaily } from "@/types/weather"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface TimelineSectionProps {
   weatherDaily: WeatherDaily
   onDayClick: (timestamp: number) => void
   selectedTimestamp: number | null
   timezone: string | null
+  jumpTrigger: number
 }
 
-export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimestamp, timezone }: TimelineSectionProps) {
+export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimestamp, timezone, jumpTrigger }: TimelineSectionProps) {
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -32,35 +33,42 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
     })
   }
 
-  useEffect(() => {
+  const handleScrollEdgeCheck = () => {
     const el = scrollRef.current
     if (!el) return
 
-    const handleScrollEdgeCheck = () => {
-      const isAtStart = el.scrollLeft <= 1
-      const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1
+    const isAtStart = el.scrollLeft <= 1
+    const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1
 
-      const stateChanged = lastEdgeState.current.atStart !== isAtStart || lastEdgeState.current.atEnd !== isAtEnd
+    const stateChanged = lastEdgeState.current.atStart !== isAtStart || lastEdgeState.current.atEnd !== isAtEnd
 
-      if (stateChanged) {
-        lastEdgeState.current = { atStart: isAtStart, atEnd: isAtEnd }
-
-        setAtStart(isAtStart)
-        setAtEnd(isAtEnd)
-      }
+    if (stateChanged) {
+      lastEdgeState.current = { atStart: isAtStart, atEnd: isAtEnd }
+      setAtStart(isAtStart)
+      setAtEnd(isAtEnd)
     }
+  }
+
+  const scrollToMiddle = useCallback((smooth?: boolean) => {
+    const el = scrollRef.current
+    if (!el) return
 
     requestAnimationFrame(() => {
       setTimeout(() => {
         el.scrollTo({
-          left: (el.scrollWidth / 15) * 6,
-          behavior: "instant"
+          left: (el.scrollWidth - el.clientWidth) / 2,
+          behavior: smooth ? "smooth" : "instant"
         })
         handleScrollEdgeCheck()
       }, 0)
     })
+  }, [])
 
-    handleScrollEdgeCheck()
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    scrollToMiddle()
 
     el.addEventListener("scroll", handleScrollEdgeCheck)
     window.addEventListener("resize", handleScrollEdgeCheck)
@@ -71,7 +79,13 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
       window.removeEventListener("resize", handleScrollEdgeCheck)
       observer.disconnect()
     }
-  }, [])
+  }, [scrollToMiddle])
+
+  useEffect(() => {
+    if (jumpTrigger > 0) {
+      scrollToMiddle(true)
+    }
+  }, [jumpTrigger, scrollToMiddle])
 
   return (
     <div className="relative mb-2">

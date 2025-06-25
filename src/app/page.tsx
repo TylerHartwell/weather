@@ -110,7 +110,10 @@ export default function WeatherDashboard() {
               scrollTrigger={scrollTrigger}
             />
             <div className="flex justify-center">
-              <button onClick={jumpToNow} className="bg-blue-600 hover:bg-blue-700 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer">
+              <button
+                onClick={jumpToNow}
+                className="bg-blue-800 hover:bg-blue-900 active:bg-blue-900 text-gray-100 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer"
+              >
                 <Watch className="h-full w-full stroke-1" />
               </button>
             </div>
@@ -120,6 +123,7 @@ export default function WeatherDashboard() {
               onDayClick={handleDayClick}
               selectedTimestamp={selectedTimestamp}
               timezone={weatherData.timezone}
+              jumpTrigger={jumpTrigger}
             />
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
           </div>
