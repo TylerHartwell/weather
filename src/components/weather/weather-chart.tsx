@@ -555,9 +555,9 @@ export default function WeatherChart({
     }
   }, [allHours, currentHourIndex, getVisibilityState, isLongPress, timezone, calculateTimePerPixel])
 
-  useEffect(() => {
-    drawChart()
-  }, [drawChart])
+  // useEffect(() => {
+  //   drawChart()
+  // }, [drawChart])
 
   const requestChartDraw = useCallback(() => {
     if (rafRef.current) return
@@ -566,6 +566,8 @@ export default function WeatherChart({
       rafRef.current = null
     })
   }, [drawChart])
+
+  requestChartDraw()
 
   const updatePointerPos = useCallback(
     (e: PointerEvent) => {
