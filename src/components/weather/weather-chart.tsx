@@ -555,10 +555,6 @@ export default function WeatherChart({
     }
   }, [allHours, currentHourIndex, getVisibilityState, isLongPress, timezone, calculateTimePerPixel])
 
-  // useEffect(() => {
-  //   drawChart()
-  // }, [drawChart])
-
   const requestChartDraw = useCallback(() => {
     if (rafRef.current) return
     rafRef.current = requestAnimationFrame(() => {
