@@ -16,7 +16,12 @@ import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
 
 export default function WeatherDashboard() {
-  const [location, setLocation] = useState("San Diego")
+  const [location, setLocation] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("location") || "San Diego"
+    }
+    return "San Diego"
+  })
   const [windSpeedUnit, setWindSpeedUnit] = useState<WindSpeedUnit>("mph")
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
@@ -35,6 +40,10 @@ export default function WeatherDashboard() {
   }, [handleFetchWeather])
 
   useEffect(() => {
+    localStorage.setItem("location", location)
+  }, [location])
+
+  useEffect(() => {
     if (error) {
       console.log(error.message)
     }
@@ -47,25 +56,21 @@ export default function WeatherDashboard() {
 
   const toggleWindUnit = () => {
     setWindSpeedUnit(prev => (prev === "mph" ? "kmh" : "mph"))
-    handleFetchWeather()
   }
   const toggleTempUnit = () => {
     setTemperatureUnit(prev => (prev === "fahrenheit" ? "celsius" : "fahrenheit"))
-    handleFetchWeather()
   }
   const togglePrecipitationUnit = () => {
     setPrecipitationUnit(prev => (prev === "inch" ? "mm" : "inch"))
-    handleFetchWeather()
   }
 
   const handleSearch = useCallback(
     (query: string) => {
       if (query !== location) {
         setLocation(query)
-        handleFetchWeather()
       }
     },
-    [handleFetchWeather, location]
+    [location]
   )
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)

@@ -127,7 +127,6 @@ export async function fetchWeatherData(
       precipitationUnit,
       locationName: locationData.name,
       countryCode: locationData.countryCode,
-
       admin1: locationData.admin1,
       postcodes: locationData.postcodes
     }
