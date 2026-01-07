@@ -106,7 +106,7 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
               size="icon"
               className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
             >
-              <span className="translate-x-1 -translate-y-0.25">|</span>
+              <span className="translate-x-1 -translate-y-px">|</span>
               <ChevronLeft className="h-4 w-4 " />
             </Button>
           </div>
@@ -120,7 +120,7 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
               className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
             >
               <ChevronRight className="h-4 w-4" />
-              <span className="-translate-x-1 -translate-y-0.25">|</span>
+              <span className="-translate-x-1 -translate-y-px">|</span>
             </Button>
           </div>
         )}

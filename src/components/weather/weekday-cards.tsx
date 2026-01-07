@@ -82,7 +82,7 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
           return (
             <Card
               key={`timeline-day-${index}`}
-              className={`bg-gray-800 border-gray-700 text-white m-1 flex flex-col items-center min-w-[90px] cursor-pointer hover:bg-gray-700 transition-colors w-0 ${
+              className={`bg-gray-800 border-gray-700 text-white m-1 flex flex-col items-center min-w-22.5 cursor-pointer hover:bg-gray-700 transition-colors w-0 ${
                 day.time.setZone(timezone || "local").hasSame(today, "day") ? "border-accent" : ""
               } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
               onClick={() => handleDayClick(day.time.toMillis() || 0)}
