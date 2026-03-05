@@ -4,7 +4,7 @@ A Next.js weather dashboard that combines current conditions, a weekday summary,
 
 It allows users to explore both historical and forecasted data for temperature, precipitation, and wind in a unified visual format for a holistic overview.
 
-Live site: https://weather.tylerhartwell.com/
+Live site: <a href="https://weather.tylerhartwell.com/" target="_blank" rel="noopener noreferrer">https://weather.tylerhartwell.com/</a>
 
 ## Features
 
