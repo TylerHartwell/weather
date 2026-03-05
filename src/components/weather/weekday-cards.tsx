@@ -63,6 +63,8 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
         const dayId = `day-${selectedDay.time.setZone(timezone || "local").toMillis()}`
         setHighlightedDayId(dayId)
       }
+    } else {
+      setHighlightedDayId(null)
     }
   }, [selectedTimestamp, allDays, timezone])
 
@@ -97,12 +99,12 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
               </div>
               <div className="flex text-xs justify-around items-center w-full">
                 <span className="flex flex-col items-center">
-                  <Sunrise className=" w-3/4 h-3/4 text-yellow-200" />
+                  <Sunrise className="size-1/2 text-yellow-200" />
 
                   <span>{day.sunrise.toFormat("h:mm") + day.sunrise.toFormat("a").toLowerCase()}</span>
                 </span>
                 <span className="flex flex-col items-center ">
-                  <Sunset className=" w-3/4 h-3/4 text-yellow-600" />
+                  <Sunset className="size-1/2 text-yellow-600" />
 
                   <span>{day.sunset.toFormat("h:mm") + day.sunset.toFormat("a").toLowerCase()}</span>
                 </span>

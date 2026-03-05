@@ -74,6 +74,7 @@ export default function WeatherDashboard() {
   )
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)
+    setSelectedTimestamp(null)
   }, [])
 
   if (isLoading && !weatherData) {

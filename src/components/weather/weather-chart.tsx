@@ -563,7 +563,9 @@ export default function WeatherChart({
     })
   }, [drawChart])
 
-  requestChartDraw()
+  useEffect(() => {
+    requestChartDraw()
+  }, [requestChartDraw])
 
   const updatePointerPos = useCallback(
     (e: PointerEvent) => {
@@ -627,7 +629,6 @@ export default function WeatherChart({
       pointerDownPos.current = { x: e.clientX, y: e.clientY }
 
       longPressTimeout.current = window.setTimeout(() => {
-        requestChartDraw()
         setIsLongPress(true)
         canvasRectRef.current = canvas.getBoundingClientRect()
         updatePointerPos(e)
@@ -636,7 +637,7 @@ export default function WeatherChart({
       dragStartX.current = e.clientX
       scrollStartX.current = container.scrollLeft
     },
-    [requestChartDraw, updatePointerPos]
+    [updatePointerPos]
   )
 
   const handlePointerUp = useCallback(() => {
