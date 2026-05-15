@@ -88,12 +88,12 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
   }, [jumpTrigger, scrollToMiddle])
 
   return (
-    <div className="relative mb-2">
-      <h3 className="text-lg font-medium hidden 2xs:inline absolute top-0 -translate-y-full">Weekday Summary</h3>
-      <div className="relative flex justify-center">
+    <div className=" relative mb-2 flex flex-col">
+      <h3 className=" text-lg font-medium hidden 2xs:inline absolute top-0 -translate-y-full">Weekday Summary</h3>
+      <div className="relative flex  justify-center">
         <div
           ref={scrollRef}
-          className="overflow-x-auto pb-2 scroll-smooth w-min scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
+          className="flex flex-col overflow-x-auto pb-2 scroll-smooth w-min scrollbar scrollbar-h-2 scrollbar-thumb-[#4b5563] scrollbar-track-[#252b36] scrollbar-hover:scrollbar-thumb-[#6b7280] scrollbar-track-hover:scrollbar-track-[#2f3846] scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
         >
           <WeekdayCards weatherDaily={weatherDaily} onDayClick={onDayClick} selectedTimestamp={selectedTimestamp} timezone={timezone} />
         </div>

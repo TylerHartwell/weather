@@ -32,7 +32,7 @@ export default function CurrentWeather({
   countryCode
 }: CurrentWeatherProps) {
   return (
-    <div className="mb-0">
+    <div className="mb-0 flex-1 flex flex-col ">
       <div className="flex items-center justify-between text-sm font-medium">
         Current Weather
         <div className="flex items-center">

@@ -92,53 +92,49 @@ export default function WeatherDashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <Card className="w-full  bg-gray-900 border-gray-800 text-white py-2">
-        <div className="px-4">
-          <div className="flex flex-col">
-            <CurrentWeather
-              weatherCurrent={weatherData.current}
-              toggleTempUnit={toggleTempUnit}
-              togglePrecipitationUnit={togglePrecipitationUnit}
-              toggleWindUnit={toggleWindUnit}
-              temperatureUnit={temperatureUnit}
-              windSpeedUnit={windSpeedUnit}
-              precipitationUnit={precipitationUnit}
-              locationName={weatherData.locationName}
-              countryCode={weatherData.countryCode}
-              admin1={weatherData.admin1}
-              postcodes={weatherData.postcodes}
-            />
-            <ChartSection
-              weatherHourly={weatherData.hourly}
-              selectedTimestamp={selectedTimestamp}
-              timezone={weatherData.timezone}
-              temperatureUnit={temperatureUnit}
-              windSpeedUnit={windSpeedUnit}
-              jumpTrigger={jumpTrigger}
-              scrollTrigger={scrollTrigger}
-            />
-            <div className="flex justify-center">
-              <button
-                onClick={e => {
-                  jumpToNow()
-                  e.currentTarget.blur()
-                }}
-                className="bg-blue-800 hover:bg-blue-900 active:bg-blue-900 text-gray-100 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer"
-              >
-                <Watch className="h-full w-full stroke-1" />
-              </button>
-            </div>
-
-            <WeekdaySection
-              weatherDaily={weatherData.daily}
-              onDayClick={handleDayClick}
-              selectedTimestamp={selectedTimestamp}
-              timezone={weatherData.timezone}
-              jumpTrigger={jumpTrigger}
-            />
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+      <Card className="w-full flex-1 bg-gray-900 border-gray-800 text-white py-2 px-4">
+        <CurrentWeather
+          weatherCurrent={weatherData.current}
+          toggleTempUnit={toggleTempUnit}
+          togglePrecipitationUnit={togglePrecipitationUnit}
+          toggleWindUnit={toggleWindUnit}
+          temperatureUnit={temperatureUnit}
+          windSpeedUnit={windSpeedUnit}
+          precipitationUnit={precipitationUnit}
+          locationName={weatherData.locationName}
+          countryCode={weatherData.countryCode}
+          admin1={weatherData.admin1}
+          postcodes={weatherData.postcodes}
+        />
+        <ChartSection
+          weatherHourly={weatherData.hourly}
+          selectedTimestamp={selectedTimestamp}
+          timezone={weatherData.timezone}
+          temperatureUnit={temperatureUnit}
+          windSpeedUnit={windSpeedUnit}
+          jumpTrigger={jumpTrigger}
+          scrollTrigger={scrollTrigger}
+        />
+        <div className="flex justify-center">
+          <button
+            onClick={e => {
+              jumpToNow()
+              e.currentTarget.blur()
+            }}
+            className="bg-blue-800 hover:bg-blue-900 active:bg-blue-900 text-gray-100 px-0 py-0 rounded-md w-12 h-8 my-0 overflow-hidden cursor-pointer"
+          >
+            <Watch className="h-full w-full stroke-1" />
+          </button>
         </div>
+
+        <WeekdaySection
+          weatherDaily={weatherData.daily}
+          onDayClick={handleDayClick}
+          selectedTimestamp={selectedTimestamp}
+          timezone={weatherData.timezone}
+          jumpTrigger={jumpTrigger}
+        />
+        <SearchBar onSearch={handleSearch} isLoading={isLoading} />
       </Card>
     </div>
   )

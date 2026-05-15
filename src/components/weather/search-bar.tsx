@@ -23,7 +23,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-4 w-full items-end gap-2 pb-2">
       <div>Location:</div>
       <div className="flex gap-2 grow">
         <Input
