@@ -18,6 +18,14 @@ export interface WeatherData {
   postcodes: string[]
 }
 
+export interface LocationSuggestion {
+  id: number
+  name: string
+  admin1?: string
+  country: string
+  countryCode: string
+}
+
 export interface WeatherCurrent {
   time: DateTime
   temperature2m: number

@@ -2,6 +2,7 @@ import type { PrecipitationUnit, TemperatureUnit, WeatherCurrent, WindSpeedUnit 
 import WeatherIcon from "./weather-icon"
 import { getWeatherDescription } from "@/lib/weather-utils"
 import { CardTitle } from "../ui/card"
+import { Search } from "lucide-react"
 
 interface CurrentWeatherProps {
   weatherCurrent: WeatherCurrent
@@ -42,6 +43,19 @@ export default function CurrentWeather({
             <span>{countryCode === "US" ? admin1 : countryCode} </span>
             {/* <span>{countryCode === "US" ? admin1 + " " + postcodes[0] : countryCode} </span> */}
           </CardTitle>
+          <button
+            type="button"
+            onClick={() => {
+              const locationInput = document.getElementById("search-location") as HTMLInputElement | null
+              locationInput?.focus()
+              locationInput?.select()
+            }}
+            className="ml-1 inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Search for a location"
+            title="Search for a location"
+          >
+            <Search className="size-4" />
+          </button>
         </div>
       </div>
       <div className="flex justify-between items-center h-20">

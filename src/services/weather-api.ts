@@ -1,30 +1,60 @@
 import { fetchWeatherApi } from "openmeteo"
-import type { PrecipitationUnit, TemperatureUnit, WeatherData, WindSpeedUnit } from "@/types/weather"
+import type { LocationSuggestion, PrecipitationUnit, TemperatureUnit, WeatherData, WindSpeedUnit } from "@/types/weather"
 import { DateTime } from "luxon"
+
+interface GeocodingResult {
+  id: number
+  name: string
+  country: string
+  country_code: string
+  admin1?: string
+  latitude: number
+  longitude: number
+  timezone?: string
+  postcodes?: string[]
+}
+
+async function getLocationResults(query: string, signal?: AbortSignal): Promise<GeocodingResult[]> {
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`, { signal })
+
+  if (!response.ok) {
+    throw new Error(`Geocoding failed: ${response.statusText}`)
+  }
+
+  const data = (await response.json()) as { results?: GeocodingResult[] }
+  return data.results ?? []
+}
+
+export async function searchLocations(query: string, signal?: AbortSignal): Promise<LocationSuggestion[]> {
+  const results = await getLocationResults(query, signal)
+  return results.map(result => ({
+    id: result.id,
+    name: result.name,
+    admin1: result.admin1,
+    country: result.country,
+    countryCode: result.country_code
+  }))
+}
 
 // Geocoding API to convert location name to coordinates
 async function getCoordinates(location: string) {
   try {
-    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1`)
+    const results = await getLocationResults(location)
 
-    if (!response.ok) {
-      throw new Error(`Geocoding failed: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-
-    if (!data.results || data.results.length === 0) {
+    if (results.length === 0) {
       throw new Error(`Location not found: ${location}`)
     }
 
+    const result = results[0]
+
     return {
-      latitude: data.results[0].latitude,
-      longitude: data.results[0].longitude,
-      name: data.results[0].name,
-      countryCode: data.results[0].country_code,
-      timezone: data.results[0].timezone || "auto",
-      admin1: data.results[0].admin1,
-      postcodes: data.results[0].postcodes ?? []
+      latitude: result.latitude,
+      longitude: result.longitude,
+      name: result.name,
+      countryCode: result.country_code,
+      timezone: result.timezone || "auto",
+      admin1: result.admin1 ?? "",
+      postcodes: result.postcodes ?? []
     }
   } catch (error) {
     throw error
