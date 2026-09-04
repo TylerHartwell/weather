@@ -15,14 +15,12 @@ import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WeatherCurrent, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
+import { LocationNotFoundError, type Coordinates } from "@/services/weather-api"
 
 export default function WeatherDashboard() {
-  const [location, setLocation] = useState<string>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("location") || "San Diego"
-    }
-    return "San Diego"
-  })
+  const [location, setLocation] = useState<string | null>(null)
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
   const [windSpeedUnit, setWindSpeedUnit] = useState<WindSpeedUnit>("mph")
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
@@ -35,22 +33,57 @@ export default function WeatherDashboard() {
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
 
   const handleFetchWeather = useCallback(() => {
-    resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })
-  }, [location, precipitationUnit, resetWeatherData, temperatureUnit, windSpeedUnit])
+    if (location) resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit, coordinates: coordinates ?? undefined })
+  }, [coordinates, location, precipitationUnit, resetWeatherData, temperatureUnit, windSpeedUnit])
+
+  const requestCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setCoordinates(null)
+      setLocation("San Diego")
+      return
+    }
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+        setLocation("Current location")
+        setIsLocating(false)
+      },
+      () => {
+        setCoordinates(null)
+        setLocation(previousLocation => previousLocation ?? "San Diego")
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
+    )
+  }, [])
+
+  useEffect(() => {
+    const savedLocation = localStorage.getItem("location")
+    if (savedLocation) {
+      setLocation(savedLocation)
+      return
+    }
+
+    requestCurrentLocation()
+  }, [requestCurrentLocation])
 
   useEffect(() => {
     handleFetchWeather()
   }, [handleFetchWeather])
 
   useEffect(() => {
-    localStorage.setItem("location", location)
-  }, [location])
+    if (location && !coordinates) localStorage.setItem("location", location)
+  }, [coordinates, location])
 
   useEffect(() => {
-    if (error) {
-      console.log(error.message)
+    if (error instanceof LocationNotFoundError && location !== "San Diego") {
+      localStorage.removeItem("location")
+      setCoordinates(null)
+      setLocation("San Diego")
     }
-  }, [error])
+  }, [error, location])
 
   useEffect(() => {
     const millisecondsUntilNextQuarterHour = 15 * 60_000 - (Date.now() % (15 * 60_000))
@@ -90,6 +123,7 @@ export default function WeatherDashboard() {
   const handleSearch = useCallback(
     (query: string) => {
       if (query !== location) {
+        setCoordinates(null)
         setLocation(query)
       }
     },
@@ -113,12 +147,7 @@ export default function WeatherDashboard() {
   }
 
   if (!weatherData || !currentWeather) {
-    return (
-      <ErrorState
-        message="No weather data available"
-        onRetry={() => resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit })}
-      />
-    )
+    return <ErrorState message="No weather data available" onRetry={handleFetchWeather} />
   }
 
   return (
@@ -134,6 +163,8 @@ export default function WeatherDashboard() {
           precipitationUnit={precipitationUnit}
           locationName={weatherData.locationName}
           countryCode={weatherData.countryCode}
+          latitude={weatherData.latitude}
+          longitude={weatherData.longitude}
           admin1={weatherData.admin1}
           postcodes={weatherData.postcodes}
         />
@@ -166,7 +197,7 @@ export default function WeatherDashboard() {
           timezone={weatherData.timezone}
           jumpTrigger={jumpTrigger}
         />
-        <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        <SearchBar onSearch={handleSearch} onUseCurrentLocation={requestCurrentLocation} isLoading={isLoading} isLocating={isLocating} />
       </Card>
     </div>
   )

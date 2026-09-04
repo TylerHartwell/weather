@@ -44,28 +44,43 @@ export default function WeatherChart({
   const canvasRectRef = useRef<DOMRect | null>(null)
   const rafRef = useRef<number | null>(null)
   const lastCenterDayTimestamp = useRef<number | null>(null)
+  const isProgrammaticScroll = useRef(false)
+  const programmaticScrollTarget = useRef<number | null>(null)
+  const updateCenterDayRef = useRef<() => void>(() => {})
 
   const chartPaddingX = 40
   const chartPaddingBottom = 50
   const chartPaddingTop = 80
   const chartWidthPerHour = 30
 
+  const cancelProgrammaticScroll = useCallback(() => {
+    const container = containerRef.current
+    if (!container || !isProgrammaticScroll.current) return
+
+    isProgrammaticScroll.current = false
+    programmaticScrollTarget.current = null
+    container.scrollTo({ left: container.scrollLeft, behavior: "instant" })
+    updateCenterDayRef.current()
+  }, [])
+
   const handleWheel = useCallback(
     (e: WheelEvent) => {
+      cancelProgrammaticScroll()
       if (isLongPress) {
         e.preventDefault() // block horizontal scroll via wheel
       }
     },
-    [isLongPress]
+    [cancelProgrammaticScroll, isLongPress]
   )
 
   const handleTouchMove = useCallback(
     (e: TouchEvent) => {
+      cancelProgrammaticScroll()
       if (isLongPress) {
         e.preventDefault() // block touch-driven horizontal scroll
       }
     },
-    [isLongPress]
+    [cancelProgrammaticScroll, isLongPress]
   )
 
   const getVisibilityState = useCallback(
@@ -644,6 +659,7 @@ export default function WeatherChart({
       const canvas = canvasRef.current
       if (!container || !canvas) return
 
+      cancelProgrammaticScroll()
       isPointerDown.current = true
       pointerDownPos.current = { x: e.clientX, y: e.clientY }
 
@@ -656,7 +672,7 @@ export default function WeatherChart({
       dragStartX.current = e.clientX
       scrollStartX.current = container.scrollLeft
     },
-    [updatePointerPos]
+    [cancelProgrammaticScroll, updatePointerPos]
   )
 
   const handlePointerUp = useCallback(() => {
@@ -685,6 +701,7 @@ export default function WeatherChart({
 
     container.addEventListener("wheel", handleWheel, { passive: false })
     container.addEventListener("touchmove", handleTouchMove, { passive: false })
+    container.addEventListener("pointerdown", cancelProgrammaticScroll)
 
     return () => {
       canvas.removeEventListener("pointerdown", handlePointerDown)
@@ -693,8 +710,9 @@ export default function WeatherChart({
       canvas.removeEventListener("pointerleave", handlePointerUp)
       container.removeEventListener("wheel", handleWheel)
       container.removeEventListener("touchmove", handleTouchMove)
+      container.removeEventListener("pointerdown", cancelProgrammaticScroll)
     }
-  }, [handlePointerDown, handlePointerMove, handlePointerUp, handleTouchMove, handleWheel, isLongPress])
+  }, [cancelProgrammaticScroll, handlePointerDown, handlePointerMove, handlePointerUp, handleTouchMove, handleWheel, isLongPress])
 
   const scrollToPosition = useCallback(
     ({
@@ -718,10 +736,17 @@ export default function WeatherChart({
       const chartTargetX = chartFraction * chartWidth
       const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, chartTargetX + chartPaddingX - containerWidth * containerFractionOffset))
 
+      isProgrammaticScroll.current = true
+      programmaticScrollTarget.current = targetScrollPosition
       container.scrollTo({
         left: targetScrollPosition,
         behavior: smooth ? "smooth" : "instant"
       })
+
+      if (Math.abs(container.scrollLeft - targetScrollPosition) <= 1) {
+        isProgrammaticScroll.current = false
+        programmaticScrollTarget.current = null
+      }
     },
     [chartPaddingX]
   )
@@ -814,11 +839,14 @@ export default function WeatherChart({
       .startOf("day")
       .toMillis()
 
+    if (isProgrammaticScroll.current) return
     if (centerDayTimestamp === lastCenterDayTimestamp.current) return
 
     lastCenterDayTimestamp.current = centerDayTimestamp
     onCenterDayChange?.(centerDayTimestamp)
   }, [allHours, chartPaddingX, onCenterDayChange, timezone])
+
+  updateCenterDayRef.current = updateCenterDay
 
   useEffect(() => {
     const container = containerRef.current
@@ -829,9 +857,18 @@ export default function WeatherChart({
     const scheduleCenterDayUpdate = () => {
       if (animationFrame !== null) return
 
+      const hasReachedProgrammaticTarget =
+        isProgrammaticScroll.current &&
+        programmaticScrollTarget.current !== null &&
+        Math.abs(container.scrollLeft - programmaticScrollTarget.current) <= 1
+
       animationFrame = requestAnimationFrame(() => {
         animationFrame = null
         updateCenterDay()
+        if (hasReachedProgrammaticTarget) {
+          isProgrammaticScroll.current = false
+          programmaticScrollTarget.current = null
+        }
       })
     }
 

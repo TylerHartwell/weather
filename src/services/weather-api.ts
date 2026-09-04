@@ -14,6 +14,18 @@ interface GeocodingResult {
   postcodes?: string[]
 }
 
+export interface Coordinates {
+  latitude: number
+  longitude: number
+}
+
+export class LocationNotFoundError extends Error {
+  constructor(location: string) {
+    super(`Location not found: ${location}`)
+    this.name = "LocationNotFoundError"
+  }
+}
+
 async function getLocationResults(query: string, signal?: AbortSignal): Promise<GeocodingResult[]> {
   const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=8`, { signal })
 
@@ -42,7 +54,7 @@ async function getCoordinates(location: string) {
     const results = await getLocationResults(location)
 
     if (results.length === 0) {
-      throw new Error(`Location not found: ${location}`)
+      throw new LocationNotFoundError(location)
     }
 
     const result = results[0]
@@ -65,10 +77,20 @@ export async function fetchWeatherData(
   location: string,
   windSpeedUnit: WindSpeedUnit,
   temperatureUnit: TemperatureUnit,
-  precipitationUnit: PrecipitationUnit
+  precipitationUnit: PrecipitationUnit,
+  coordinates?: Coordinates
 ): Promise<WeatherData> {
   try {
-    const locationData = await getCoordinates(location)
+    const locationData = coordinates
+      ? {
+          ...coordinates,
+          name: "Current location",
+          countryCode: "",
+          timezone: "auto",
+          admin1: "",
+          postcodes: []
+        }
+      : await getCoordinates(location)
 
     const params = {
       "latitude": locationData.latitude,

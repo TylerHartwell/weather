@@ -4,16 +4,18 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { LocateFixed, Search } from "lucide-react"
 import { searchLocations } from "@/services/weather-api"
 import type { LocationSuggestion } from "@/types/weather"
 
 interface SearchBarProps {
   onSearch: (query: string) => void
+  onUseCurrentLocation: () => void
   isLoading: boolean
+  isLocating: boolean
 }
 
-export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
+export default function SearchBar({ onSearch, onUseCurrentLocation, isLoading, isLocating }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([])
   const [isSearchingLocations, setIsSearchingLocations] = useState(false)
@@ -95,7 +97,7 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
           aria-autocomplete="list"
           aria-expanded={suggestions.length > 0}
           aria-controls="location-suggestions"
-          className="bg-gray-800 border-gray-700"
+          className="grow bg-gray-800 border-gray-700"
         />
         {(suggestions.length > 0 || isSearchingLocations) && (
           <ul
@@ -119,6 +121,18 @@ export default function SearchBar({ onSearch, isLoading }: SearchBarProps) {
             {isSearchingLocations && <li className="px-3 py-2 text-sm text-gray-400">Searching locations...</li>}
           </ul>
         )}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={onUseCurrentLocation}
+          disabled={isLocating}
+          className="border-gray-700 bg-gray-800 hover:bg-gray-700 hover:text-white"
+          aria-label="Use current location"
+          title="Use current location"
+        >
+          <LocateFixed className={`h-4 w-4 ${isLocating ? "animate-spin" : ""}`} />
+        </Button>
         <Button type="submit" className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
           <Search className={`h-4 w-4 rounded-full ${isLoading ? "animate-spin" : ""}`} />
         </Button>
