@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { DateTime } from "luxon"
 
 import { Card } from "@/components/ui/card"
 import { useWeatherData } from "@/hooks/use-weather-data"
@@ -11,7 +12,7 @@ import ChartSection from "@/components/weather/chart-section"
 import SearchBar from "@/components/weather/search-bar"
 import LoadingState from "@/components/weather/loading-state"
 import ErrorState from "@/components/weather/error-state"
-import { PrecipitationUnit, TemperatureUnit, WindSpeedUnit } from "@/types/weather"
+import { PrecipitationUnit, TemperatureUnit, WeatherCurrent, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
 
@@ -26,8 +27,10 @@ export default function WeatherDashboard() {
   const [temperatureUnit, setTemperatureUnit] = useState<TemperatureUnit>("fahrenheit")
   const [precipitationUnit, setPrecipitationUnit] = useState<PrecipitationUnit>("inch")
   const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(null)
+  const [scrollTargetTimestamp, setScrollTargetTimestamp] = useState<number | null>(null)
   const [jumpTrigger, setJumpTrigger] = useState(0)
   const [scrollTrigger, setScrollTrigger] = useState(0)
+  const [currentTime, setCurrentTime] = useState(() => DateTime.now())
 
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
 
@@ -49,9 +52,29 @@ export default function WeatherDashboard() {
     }
   }, [error])
 
+  useEffect(() => {
+    const millisecondsUntilNextQuarterHour = 15 * 60_000 - (Date.now() % (15 * 60_000))
+    let intervalId: number | undefined
+
+    const timeoutId = window.setTimeout(() => {
+      setCurrentTime(DateTime.now())
+      intervalId = window.setInterval(() => setCurrentTime(DateTime.now()), 15 * 60_000)
+    }, millisecondsUntilNextQuarterHour)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      if (intervalId !== undefined) window.clearInterval(intervalId)
+    }
+  }, [])
+
   const handleDayClick = useCallback((timestamp: number) => {
     setSelectedTimestamp(timestamp)
+    setScrollTargetTimestamp(timestamp)
     setScrollTrigger(prev => prev + 1)
+  }, [])
+
+  const handleChartCenterDayChange = useCallback((timestamp: number) => {
+    setSelectedTimestamp(previousTimestamp => (previousTimestamp === timestamp ? previousTimestamp : timestamp))
   }, [])
 
   const toggleWindUnit = () => {
@@ -75,13 +98,21 @@ export default function WeatherDashboard() {
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)
     setSelectedTimestamp(null)
+    setScrollTargetTimestamp(null)
   }, [])
+
+  const currentWeather = weatherData
+    ? weatherData.minutely15.reduceRight<WeatherCurrent | null>(
+        (latestInterval, interval) => (latestInterval || interval.time.toMillis() <= currentTime.toMillis() ? latestInterval || interval : null),
+        null
+      ) || weatherData.current
+    : null
 
   if (isLoading && !weatherData) {
     return <LoadingState />
   }
 
-  if (!weatherData) {
+  if (!weatherData || !currentWeather) {
     return (
       <ErrorState
         message="No weather data available"
@@ -94,7 +125,7 @@ export default function WeatherDashboard() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Card className="w-full flex-1 bg-gray-900 border-gray-800 text-white py-2 px-4">
         <CurrentWeather
-          weatherCurrent={weatherData.current}
+          weatherCurrent={currentWeather}
           toggleTempUnit={toggleTempUnit}
           togglePrecipitationUnit={togglePrecipitationUnit}
           toggleWindUnit={toggleWindUnit}
@@ -108,7 +139,8 @@ export default function WeatherDashboard() {
         />
         <ChartSection
           weatherHourly={weatherData.hourly}
-          selectedTimestamp={selectedTimestamp}
+          scrollTargetTimestamp={scrollTargetTimestamp}
+          onCenterDayChange={handleChartCenterDayChange}
           timezone={weatherData.timezone}
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}

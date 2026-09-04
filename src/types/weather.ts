@@ -2,6 +2,7 @@ import { DateTime } from "luxon"
 
 export interface WeatherData {
   current: WeatherCurrent
+  minutely15: WeatherCurrent[]
   hourly: WeatherHourly
   daily: WeatherDaily
   timezone: string | null

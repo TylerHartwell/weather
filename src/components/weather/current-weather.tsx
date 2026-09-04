@@ -81,7 +81,7 @@ export default function CurrentWeather({
               <span className="">{weatherCurrent.time.toFormat("M/dd")}</span>
             </span>
 
-            <span className="text-nowrap">{weatherCurrent.time.toFormat("h:mm a")}</span>
+            <span className="text-nowrap">~{weatherCurrent.time.toFormat("h:mm a")}</span>
           </div>
         </div>
       </div>

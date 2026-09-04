@@ -54,6 +54,7 @@ export async function fetchWeatherData(
         "sunset"
       ],
       "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation_probability", "relative_humidity_2m", "weather_code"],
+      "minutely_15": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "current": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
       "timezone": locationData.timezone,
       "past_days": 7,
@@ -74,6 +75,7 @@ export async function fetchWeatherData(
     const longitude = response.longitude()
 
     const current = response.current()!
+    const minutely15 = response.minutely15()!
     const hourly = response.hourly()!
     const daily = response.daily()!
     const sunrises = daily.variables(6)!
@@ -89,6 +91,15 @@ export async function fetchWeatherData(
         precipitation: current.variables(4)!.value(),
         weatherCode: current.variables(5)!.value()
       },
+      minutely15: [...Array((Number(minutely15.timeEnd()) - Number(minutely15.time())) / minutely15.interval())].map((_, i) => ({
+        time: DateTime.fromSeconds(Number(minutely15.time()) + i * minutely15.interval()).setZone(timezone || "local"),
+        temperature2m: minutely15.variables(0)!.valuesArray()![i],
+        relativeHumidity2m: minutely15.variables(1)!.valuesArray()![i],
+        windSpeed10m: minutely15.variables(2)!.valuesArray()![i],
+        windDirection10m: minutely15.variables(3)!.valuesArray()![i],
+        precipitation: minutely15.variables(4)!.valuesArray()![i],
+        weatherCode: minutely15.variables(5)!.valuesArray()![i]
+      })),
       hourly: {
         time: [...Array((Number(hourly.timeEnd()) - Number(hourly.time())) / hourly.interval())].map((_, i) =>
           DateTime.fromSeconds(Number(hourly.time()) + i * hourly.interval()).setZone(timezone || "local")

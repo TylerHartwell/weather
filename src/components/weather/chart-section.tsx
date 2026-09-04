@@ -7,7 +7,8 @@ import ChartControls from "./chart-controls"
 
 interface ChartSectionProps {
   weatherHourly: WeatherHourly
-  selectedTimestamp: number | null
+  scrollTargetTimestamp: number | null
+  onCenterDayChange: (timestamp: number) => void
   timezone: string | null
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
@@ -17,7 +18,8 @@ interface ChartSectionProps {
 
 export default function ChartSection({
   weatherHourly,
-  selectedTimestamp,
+  scrollTargetTimestamp,
+  onCenterDayChange,
   timezone,
   temperatureUnit,
   windSpeedUnit,
@@ -90,7 +92,8 @@ export default function ChartSection({
       />
       <WeatherChart
         weatherHourly={weatherHourly}
-        selectedTimestamp={selectedTimestamp}
+        scrollTargetTimestamp={scrollTargetTimestamp}
+        onCenterDayChange={onCenterDayChange}
         containerRef={chartContainerRef}
         visibleSeries={visibleSeries}
         timezone={timezone}

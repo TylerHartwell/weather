@@ -8,7 +8,8 @@ import { getWeatherDescription } from "@/lib/weather-utils"
 
 interface WeatherChartProps {
   weatherHourly: WeatherHourly
-  selectedTimestamp: number | null
+  scrollTargetTimestamp: number | null
+  onCenterDayChange?: (timestamp: number) => void
   containerRef?: RefObject<HTMLDivElement | null>
   visibleSeries: VisibleSeries
   timezone: string | null
@@ -18,7 +19,8 @@ interface WeatherChartProps {
 
 export default function WeatherChart({
   weatherHourly,
-  selectedTimestamp,
+  scrollTargetTimestamp,
+  onCenterDayChange,
   visibleSeries,
   timezone,
   jumpTrigger,
@@ -29,6 +31,7 @@ export default function WeatherChart({
   const containerRef = useRef<HTMLDivElement>(null)
   const [isInitialScroll, setIsInitialScroll] = useState(true)
   const [isLongPress, setIsLongPress] = useState(false)
+  const [currentTime, setCurrentTime] = useState(() => DateTime.now())
   const pointerXRef = useRef<number | null>(null)
   const pointerYRef = useRef<number | null>(null)
   const longPressTimeout = useRef<number | null>(null)
@@ -40,6 +43,7 @@ export default function WeatherChart({
   const isPointerDown = useRef(false)
   const canvasRectRef = useRef<DOMRect | null>(null)
   const rafRef = useRef<number | null>(null)
+  const lastCenterDayTimestamp = useRef<number | null>(null)
 
   const chartPaddingX = 40
   const chartPaddingBottom = 50
@@ -105,7 +109,22 @@ export default function WeatherChart({
     }
   }, [props, props.containerRef])
 
-  const currentHourIndex = allHours.findIndex(hour => hour.time.toUTC().hasSame(DateTime.now().toUTC(), "hour"))
+  useEffect(() => {
+    const millisecondsUntilNextMinute = 60_000 - (Date.now() % 60_000)
+    let intervalId: number | undefined
+
+    const timeoutId = window.setTimeout(() => {
+      setCurrentTime(DateTime.now())
+      intervalId = window.setInterval(() => setCurrentTime(DateTime.now()), 60_000)
+    }, millisecondsUntilNextMinute)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      if (intervalId !== undefined) window.clearInterval(intervalId)
+    }
+  }, [])
+
+  const currentHourIndex = allHours.findIndex(hour => hour.time.toUTC().hasSame(currentTime.toUTC(), "hour"))
 
   const calculateTimePerPixel = useCallback(() => {
     if (allHours.length < 2 || !canvasRef.current) return 0
@@ -258,7 +277,7 @@ export default function WeatherChart({
 
       ctx.save()
 
-      const now = DateTime.now()
+      const now = currentTime
 
       const currentMinute = now.minute
 
@@ -553,7 +572,7 @@ export default function WeatherChart({
     if (isLongPress) {
       drawChartInfoBox()
     }
-  }, [allHours, currentHourIndex, getVisibilityState, isLongPress, timezone, calculateTimePerPixel])
+  }, [allHours, currentHourIndex, currentTime, getVisibilityState, isLongPress, timezone, calculateTimePerPixel])
 
   const requestChartDraw = useCallback(() => {
     if (rafRef.current) return
@@ -747,9 +766,9 @@ export default function WeatherChart({
 
   // Handle scrolling to a specific timestamp with smooth animation
   useEffect(() => {
-    if (selectedTimestamp === null || allHours.length <= 1 || isInitialScroll) return
+    if (scrollTargetTimestamp === null || allHours.length <= 1 || isInitialScroll) return
 
-    const selectedDate = DateTime.fromMillis(selectedTimestamp)
+    const selectedDate = DateTime.fromMillis(scrollTargetTimestamp)
       .setZone(timezone || "local")
       .startOf("day")
 
@@ -760,7 +779,7 @@ export default function WeatherChart({
     const targetTimeStamp = dayMiddle
 
     handleScrollToPosition(targetTimeStamp)
-  }, [scrollTrigger, selectedTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
+  }, [scrollTrigger, scrollTargetTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {
@@ -775,6 +794,63 @@ export default function WeatherChart({
 
     setIsInitialScroll(false)
   }, [currentHourIndex, allHours, isInitialScroll, scrollToPosition, timezone, handleScrollToPosition])
+
+  const updateCenterDay = useCallback(() => {
+    const canvas = canvasRef.current
+    const container = containerRef.current
+
+    if (!canvas || !container || allHours.length <= 1) return
+
+    const chartWidth = canvas.scrollWidth - chartPaddingX * 2
+    if (chartWidth <= 0) return
+
+    const centerX = container.scrollLeft + container.clientWidth / 2
+    const chartFraction = Math.min(1, Math.max(0, (centerX - chartPaddingX) / chartWidth))
+    const startTimestamp = allHours[0].time.toMillis()
+    const endTimestamp = allHours[allHours.length - 1].time.toMillis()
+    const centerTimestamp = startTimestamp + chartFraction * (endTimestamp - startTimestamp)
+    const centerDayTimestamp = DateTime.fromMillis(centerTimestamp)
+      .setZone(timezone || "local")
+      .startOf("day")
+      .toMillis()
+
+    if (centerDayTimestamp === lastCenterDayTimestamp.current) return
+
+    lastCenterDayTimestamp.current = centerDayTimestamp
+    onCenterDayChange?.(centerDayTimestamp)
+  }, [allHours, chartPaddingX, onCenterDayChange, timezone])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let animationFrame: number | null = null
+
+    const scheduleCenterDayUpdate = () => {
+      if (animationFrame !== null) return
+
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = null
+        updateCenterDay()
+      })
+    }
+
+    lastCenterDayTimestamp.current = null
+    scheduleCenterDayUpdate()
+
+    container.addEventListener("scroll", scheduleCenterDayUpdate, { passive: true })
+    window.addEventListener("resize", scheduleCenterDayUpdate)
+
+    const resizeObserver = new ResizeObserver(scheduleCenterDayUpdate)
+    resizeObserver.observe(container)
+
+    return () => {
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame)
+      container.removeEventListener("scroll", scheduleCenterDayUpdate)
+      window.removeEventListener("resize", scheduleCenterDayUpdate)
+      resizeObserver.disconnect()
+    }
+  }, [updateCenterDay])
 
   return (
     <div className="relative mt-1 mb-1">

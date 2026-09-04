@@ -79,16 +79,20 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
       {allDays.map((day, index) => {
         // Create a unique ID for this day using timestamp
         const dayId = `day-${day.time.setZone(timezone || "local").toMillis()}`
+        const isToday = day.time.setZone(timezone || "local").hasSame(today, "day")
+        const dayName = day.time.toLocaleString({ weekday: "short" })
+        const sunriseTime = day.sunrise.toFormat("h:mm") + day.sunrise.toFormat("a").toLowerCase()
+        const sunsetTime = day.sunset.toFormat("h:mm") + day.sunset.toFormat("a").toLowerCase()
 
         return (
           <Card
             key={`timeline-day-${index}`}
             className={`bg-gray-800 border-gray-700 text-white m-1 flex flex-col items-center min-w-22.5 cursor-pointer hover:bg-gray-700 transition-colors w-0 ${
-              day.time.setZone(timezone || "local").hasSame(today, "day") ? "border-accent" : ""
-            } ${dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""}`}
+              dayId === highlightedDayId ? "ring-2 ring-blue-500 bg-gray-700" : ""
+            }`}
             onClick={() => handleDayClick(day.time.toMillis() || 0)}
           >
-            <div className="text-sm font-medium">{day.time.toLocaleString({ weekday: "short" })}</div>
+            <div className="text-sm font-medium">{isToday ? `- ${dayName} -` : dayName}</div>
             <div className="text-xs text-gray-400 mb-1">{day.time.day}</div>
             <div className="flex-1">
               <WeatherIcon type={getWeatherDescription(day.weatherCode)} size="sm" />
@@ -98,12 +102,12 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
               <span className="flex flex-col items-center">
                 <Sunrise className="size-1/2 text-yellow-200" />
 
-                <span>{day.sunrise.toFormat("h:mm") + day.sunrise.toFormat("a").toLowerCase()}</span>
+                <span>{sunriseTime}</span>
               </span>
               <span className="flex flex-col items-center ">
                 <Sunset className="size-1/2 text-yellow-600" />
 
-                <span>{day.sunset.toFormat("h:mm") + day.sunset.toFormat("a").toLowerCase()}</span>
+                <span>{sunsetTime}</span>
               </span>
             </div>
             <div className="text-sm flex gap-1 text-green-400">
