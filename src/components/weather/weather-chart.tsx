@@ -46,6 +46,7 @@ export default function WeatherChart({
   const lastCenterDayTimestamp = useRef<number | null>(null)
   const isProgrammaticScroll = useRef(false)
   const programmaticScrollTarget = useRef<number | null>(null)
+  const programmaticScrollTimeout = useRef<number | null>(null)
   const updateCenterDayRef = useRef<() => void>(() => {})
 
   const chartPaddingX = 40
@@ -55,6 +56,10 @@ export default function WeatherChart({
 
   const cancelProgrammaticScroll = useCallback(() => {
     const container = containerRef.current
+    if (programmaticScrollTimeout.current !== null) {
+      window.clearTimeout(programmaticScrollTimeout.current)
+      programmaticScrollTimeout.current = null
+    }
     if (!container || !isProgrammaticScroll.current) return
 
     isProgrammaticScroll.current = false
@@ -736,6 +741,11 @@ export default function WeatherChart({
       const chartTargetX = chartFraction * chartWidth
       const targetScrollPosition = Math.min(maxScrollLeft, Math.max(0, chartTargetX + chartPaddingX - containerWidth * containerFractionOffset))
 
+      if (programmaticScrollTimeout.current !== null) {
+        window.clearTimeout(programmaticScrollTimeout.current)
+        programmaticScrollTimeout.current = null
+      }
+
       isProgrammaticScroll.current = true
       programmaticScrollTarget.current = targetScrollPosition
       container.scrollTo({
@@ -746,6 +756,16 @@ export default function WeatherChart({
       if (Math.abs(container.scrollLeft - targetScrollPosition) <= 1) {
         isProgrammaticScroll.current = false
         programmaticScrollTarget.current = null
+      } else {
+        // Safety net: if the smooth scroll never settles within 1px of the target (e.g. clamped by the
+        // browser), force-clear the flag so center-day updates aren't blocked forever.
+        programmaticScrollTimeout.current = window.setTimeout(() => {
+          programmaticScrollTimeout.current = null
+          if (!isProgrammaticScroll.current) return
+          isProgrammaticScroll.current = false
+          programmaticScrollTarget.current = null
+          updateCenterDayRef.current()
+        }, 1000)
       }
     },
     [chartPaddingX]
@@ -864,11 +884,11 @@ export default function WeatherChart({
 
       animationFrame = requestAnimationFrame(() => {
         animationFrame = null
-        updateCenterDay()
         if (hasReachedProgrammaticTarget) {
           isProgrammaticScroll.current = false
           programmaticScrollTarget.current = null
         }
+        updateCenterDay()
       })
     }
 

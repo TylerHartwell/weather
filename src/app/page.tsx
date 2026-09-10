@@ -131,9 +131,15 @@ export default function WeatherDashboard() {
   )
   const jumpToNow = useCallback(() => {
     setJumpTrigger(prev => prev + 1)
-    setSelectedTimestamp(null)
+    // Highlight today's card immediately instead of waiting for the chart's scroll-settle callback,
+    // which may never fire (or get stuck) if the scroll animation doesn't land exactly on target.
+    setSelectedTimestamp(
+      DateTime.now()
+        .setZone(weatherData?.timezone || "local")
+        .toMillis()
+    )
     setScrollTargetTimestamp(null)
-  }, [])
+  }, [weatherData?.timezone])
 
   const currentWeather = weatherData
     ? weatherData.minutely15.reduceRight<WeatherCurrent | null>(
