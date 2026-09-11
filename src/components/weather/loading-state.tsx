@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card"
-import WeatherSkeleton from "./weather-skeleton"
 import LoadingOverlay from "./loading-overlay"
 
 export default function LoadingState() {
@@ -7,7 +6,6 @@ export default function LoadingState() {
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
       <Card className="relative w-full flex-1 bg-gray-900 border-gray-800 text-white py-2 px-4">
         <LoadingOverlay />
-        <WeatherSkeleton />
       </Card>
     </div>
   )

@@ -53,7 +53,7 @@ export default function WeatherDashboard() {
       },
       () => {
         setCoordinates(null)
-        setLocation(previousLocation => previousLocation ?? "San Diego")
+        setLocation(previousLocation => (previousLocation && previousLocation !== "Current location" ? previousLocation : "San Diego"))
         setIsLocating(false)
       },
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 }
@@ -62,7 +62,7 @@ export default function WeatherDashboard() {
 
   useEffect(() => {
     const savedLocation = localStorage.getItem("location")
-    if (savedLocation) {
+    if (savedLocation && savedLocation !== "Current location") {
       setLocation(savedLocation)
       return
     }
@@ -75,8 +75,8 @@ export default function WeatherDashboard() {
   }, [handleFetchWeather])
 
   useEffect(() => {
-    if (location && !coordinates) localStorage.setItem("location", location)
-  }, [coordinates, location])
+    if (location) localStorage.setItem("location", location)
+  }, [location])
 
   useEffect(() => {
     if (error instanceof LocationNotFoundError && location !== "San Diego") {
