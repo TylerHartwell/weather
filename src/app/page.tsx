@@ -10,12 +10,13 @@ import CurrentWeather from "@/components/weather/current-weather"
 
 import ChartSection from "@/components/weather/chart-section"
 import SearchBar from "@/components/weather/search-bar"
-import LoadingState from "@/components/weather/loading-state"
+import LoadingOverlay from "@/components/weather/loading-overlay"
 import ErrorState from "@/components/weather/error-state"
 import { PrecipitationUnit, TemperatureUnit, WeatherCurrent, WindSpeedUnit } from "@/types/weather"
 import WeekdaySection from "@/components/weather/weekday-section"
 import { Watch } from "lucide-react"
 import { LocationNotFoundError, type Coordinates } from "@/services/weather-api"
+import { createPlaceholderWeatherData } from "@/lib/weather-utils"
 
 export default function WeatherDashboard() {
   const [location, setLocation] = useState<string | null>(null)
@@ -141,24 +142,23 @@ export default function WeatherDashboard() {
     setScrollTargetTimestamp(null)
   }, [weatherData?.timezone])
 
+  const displayWeatherData = weatherData ?? createPlaceholderWeatherData({ windSpeedUnit, temperatureUnit, precipitationUnit })
+
   const currentWeather = weatherData
     ? weatherData.minutely15.reduceRight<WeatherCurrent | null>(
         (latestInterval, interval) => (latestInterval || interval.time.toMillis() <= currentTime.toMillis() ? latestInterval || interval : null),
         null
       ) || weatherData.current
-    : null
+    : displayWeatherData.current
 
-  if (isLoading && !weatherData) {
-    return <LoadingState />
-  }
-
-  if (!weatherData || !currentWeather) {
+  if (!isLoading && !weatherData) {
     return <ErrorState message="No weather data available" onRetry={handleFetchWeather} />
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <Card className="w-full flex-1 bg-gray-900 border-gray-800 text-white py-2 px-4">
+      <Card className="relative w-full flex-1 bg-gray-900 border-gray-800 text-white py-2 px-4">
+        {isLoading && <LoadingOverlay />}
         <CurrentWeather
           weatherCurrent={currentWeather}
           toggleTempUnit={toggleTempUnit}
@@ -167,18 +167,18 @@ export default function WeatherDashboard() {
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
           precipitationUnit={precipitationUnit}
-          locationName={weatherData.locationName}
-          countryCode={weatherData.countryCode}
-          latitude={weatherData.latitude}
-          longitude={weatherData.longitude}
-          admin1={weatherData.admin1}
-          postcodes={weatherData.postcodes}
+          locationName={displayWeatherData.locationName}
+          countryCode={displayWeatherData.countryCode}
+          latitude={displayWeatherData.latitude}
+          longitude={displayWeatherData.longitude}
+          admin1={displayWeatherData.admin1}
+          postcodes={displayWeatherData.postcodes}
         />
         <ChartSection
-          weatherHourly={weatherData.hourly}
+          weatherHourly={displayWeatherData.hourly}
           scrollTargetTimestamp={scrollTargetTimestamp}
           onCenterDayChange={handleChartCenterDayChange}
-          timezone={weatherData.timezone}
+          timezone={displayWeatherData.timezone}
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
           jumpTrigger={jumpTrigger}
@@ -197,10 +197,10 @@ export default function WeatherDashboard() {
         </div>
 
         <WeekdaySection
-          weatherDaily={weatherData.daily}
+          weatherDaily={displayWeatherData.daily}
           onDayClick={handleDayClick}
           selectedTimestamp={selectedTimestamp}
-          timezone={weatherData.timezone}
+          timezone={displayWeatherData.timezone}
           jumpTrigger={jumpTrigger}
         />
         <SearchBar onSearch={handleSearch} onUseCurrentLocation={requestCurrentLocation} isLoading={isLoading} isLocating={isLocating} />
