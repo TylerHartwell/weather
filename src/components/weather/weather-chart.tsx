@@ -15,6 +15,7 @@ interface WeatherChartProps {
   timezone: string | null
   jumpTrigger: number
   scrollTrigger: number
+  dataLoadTrigger: number
 }
 
 export default function WeatherChart({
@@ -25,6 +26,7 @@ export default function WeatherChart({
   timezone,
   jumpTrigger,
   scrollTrigger,
+  dataLoadTrigger,
   ...props
 }: WeatherChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -825,6 +827,11 @@ export default function WeatherChart({
 
     handleScrollToPosition(targetTimeStamp)
   }, [scrollTrigger, scrollTargetTimestamp, allHours, timezone, isInitialScroll, scrollToPosition, handleScrollToPosition])
+
+  // Re-run the instant auto-scroll whenever fresh weather data loads (not just on first mount)
+  useEffect(() => {
+    if (dataLoadTrigger > 0) setIsInitialScroll(true)
+  }, [dataLoadTrigger])
 
   // Auto-scroll to current time on initial render
   useEffect(() => {

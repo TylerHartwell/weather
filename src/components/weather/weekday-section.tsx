@@ -10,9 +10,17 @@ interface TimelineSectionProps {
   selectedTimestamp: number | null
   timezone: string | null
   jumpTrigger: number
+  dataLoadTrigger: number
 }
 
-export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimestamp, timezone, jumpTrigger }: TimelineSectionProps) {
+export default function WeekdaySection({
+  weatherDaily,
+  onDayClick,
+  selectedTimestamp,
+  timezone,
+  jumpTrigger,
+  dataLoadTrigger
+}: TimelineSectionProps) {
   const [atStart, setAtStart] = useState(true)
   const [atEnd, setAtEnd] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -86,6 +94,12 @@ export default function WeekdaySection({ weatherDaily, onDayClick, selectedTimes
       scrollToMiddle(true)
     }
   }, [jumpTrigger, scrollToMiddle])
+
+  useEffect(() => {
+    if (dataLoadTrigger > 0) {
+      scrollToMiddle()
+    }
+  }, [dataLoadTrigger, scrollToMiddle])
 
   return (
     <div className=" relative mb-2 flex flex-col">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { DateTime } from "luxon"
 
 import { Card } from "@/components/ui/card"
@@ -29,9 +29,19 @@ export default function WeatherDashboard() {
   const [scrollTargetTimestamp, setScrollTargetTimestamp] = useState<number | null>(null)
   const [jumpTrigger, setJumpTrigger] = useState(0)
   const [scrollTrigger, setScrollTrigger] = useState(0)
+  const [dataLoadTrigger, setDataLoadTrigger] = useState(0)
   const [currentTime, setCurrentTime] = useState(() => DateTime.now())
 
   const { weatherData, isLoading, error, resetWeatherData } = useWeatherData()
+  const hasCenteredOnInitialLoad = useRef(false)
+
+  // Center the chart and weekday cards on "now" instantly, but only for the very first load.
+  useEffect(() => {
+    if (weatherData && !hasCenteredOnInitialLoad.current) {
+      hasCenteredOnInitialLoad.current = true
+      setDataLoadTrigger(prev => prev + 1)
+    }
+  }, [weatherData])
 
   const handleFetchWeather = useCallback(() => {
     if (location) resetWeatherData({ location, windSpeedUnit, temperatureUnit, precipitationUnit, coordinates: coordinates ?? undefined })
@@ -183,6 +193,7 @@ export default function WeatherDashboard() {
           windSpeedUnit={windSpeedUnit}
           jumpTrigger={jumpTrigger}
           scrollTrigger={scrollTrigger}
+          dataLoadTrigger={dataLoadTrigger}
         />
         <div className="flex justify-center">
           <button
@@ -202,6 +213,7 @@ export default function WeatherDashboard() {
           selectedTimestamp={selectedTimestamp}
           timezone={displayWeatherData.timezone}
           jumpTrigger={jumpTrigger}
+          dataLoadTrigger={dataLoadTrigger}
         />
         <SearchBar onSearch={handleSearch} onUseCurrentLocation={requestCurrentLocation} isLoading={isLoading} isLocating={isLocating} />
       </Card>

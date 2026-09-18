@@ -14,6 +14,7 @@ interface ChartSectionProps {
   windSpeedUnit: WindSpeedUnit
   jumpTrigger: number
   scrollTrigger: number
+  dataLoadTrigger: number
 }
 
 export default function ChartSection({
@@ -24,7 +25,8 @@ export default function ChartSection({
   temperatureUnit,
   windSpeedUnit,
   jumpTrigger,
-  scrollTrigger
+  scrollTrigger,
+  dataLoadTrigger
 }: ChartSectionProps) {
   const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: false, solo: false }])) as VisibleSeries
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
@@ -99,6 +101,7 @@ export default function ChartSection({
         timezone={timezone}
         jumpTrigger={jumpTrigger}
         scrollTrigger={scrollTrigger}
+        dataLoadTrigger={dataLoadTrigger}
       />
     </div>
   )
