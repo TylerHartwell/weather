@@ -92,14 +92,6 @@ export default function WeatherChart({
 
   const getVisibilityState = useCallback(
     (seriesKey: SeriesKey) => {
-      const anySolo = Object.values(visibleSeries).some(state => state.solo)
-
-      if (anySolo) {
-        // If any dataDisplay is in solo mode, only the solo dataDisplay is visible
-        return visibleSeries[seriesKey].solo
-      }
-
-      // Otherwise, all dataDisplays that aren't hidden are visible
       return !visibleSeries[seriesKey].hidden
     },
     [visibleSeries]

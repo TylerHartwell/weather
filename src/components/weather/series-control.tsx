@@ -22,13 +22,13 @@ const seriesConfig: Record<
   },
   precipitation: {
     label: "Precipitation",
-    labelUnits: () => "(%)",
+    labelUnits: () => "(P%)",
     bgColor: "bg-blue-400",
     textColor: "text-blue-400"
   },
   humidity: {
     label: "Humidity",
-    labelUnits: () => "(%)",
+    labelUnits: () => "(H%)",
     bgColor: "bg-pink-400",
     textColor: "text-pink-400"
   },

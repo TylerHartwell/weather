@@ -70,7 +70,7 @@ export type WeatherDay = {
 export const seriesKeys = ["temperature", "precipitation", "humidity", "wind"] as const
 export type SeriesKey = (typeof seriesKeys)[number]
 
-export type VisibleSeries = Record<SeriesKey, { hidden: boolean; solo: boolean }>
+export type VisibleSeries = Record<SeriesKey, { hidden: boolean }>
 
 export type WindSpeedUnit = "mph" | "kmh"
 export type TemperatureUnit = "fahrenheit" | "celsius"

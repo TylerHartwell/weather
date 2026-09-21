@@ -28,7 +28,7 @@ export default function ChartSection({
   scrollTrigger,
   dataLoadTrigger
 }: ChartSectionProps) {
-  const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: false, solo: false }])) as VisibleSeries
+  const initialVisibleSeries: VisibleSeries = Object.fromEntries(seriesKeys.map(key => [key, { hidden: key === "humidity" }])) as VisibleSeries
   const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>(initialVisibleSeries)
   const chartContainerRef = useRef<HTMLDivElement | null>(null)
 
