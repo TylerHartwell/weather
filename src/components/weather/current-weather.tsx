@@ -40,9 +40,9 @@ export default function CurrentWeather({
     <div className="mb-0 flex-1 flex flex-col ">
       <div className="flex items-center justify-between text-sm font-medium">
         Current Weather
-        <div className="flex items-center">
-          <span className="text-sm text-gray-400 font-normal">Results for</span>
-          <CardTitle className="ml-2 text-base font-medium">
+        <div className="flex items-center justify-end">
+          <span className="text-sm text-gray-400 font-normal text-nowrap mr-1">Location:</span>
+          <CardTitle className="text-base font-medium">
             <span>{locationName}</span>
             {countryCode ? (
               <span>, {countryCode === "US" ? admin1 : countryCode}</span>

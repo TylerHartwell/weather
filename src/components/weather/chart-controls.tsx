@@ -4,12 +4,11 @@ import SeriesControl from "./series-control"
 interface ChartControlsProps {
   visibleSeries: VisibleSeries
   onHideToggle: (seriesKey: SeriesKey) => void
-  onSoloToggle: (seriesKey: SeriesKey) => void
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
 }
 
-export default function ChartControls({ visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle, onSoloToggle }: ChartControlsProps) {
+export default function ChartControls({ visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle }: ChartControlsProps) {
   return (
     <div className="flex items-center justify-center sm:justify-between gap-4">
       <h3 className="text-lg font-medium hidden sm:inline-block text-nowrap">24-Hour Weather</h3>
@@ -20,7 +19,6 @@ export default function ChartControls({ visibleSeries, temperatureUnit, windSpee
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
           onHideToggle={onHideToggle}
-          onSoloToggle={onSoloToggle}
         />
         <SeriesControl
           seriesKey="temperature"
@@ -28,7 +26,6 @@ export default function ChartControls({ visibleSeries, temperatureUnit, windSpee
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
           onHideToggle={onHideToggle}
-          onSoloToggle={onSoloToggle}
         />
 
         <SeriesControl
@@ -37,7 +34,6 @@ export default function ChartControls({ visibleSeries, temperatureUnit, windSpee
           temperatureUnit={temperatureUnit}
           windSpeedUnit={windSpeedUnit}
           onHideToggle={onHideToggle}
-          onSoloToggle={onSoloToggle}
         />
       </div>
     </div>

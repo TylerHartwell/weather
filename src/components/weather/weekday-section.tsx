@@ -103,7 +103,7 @@ export default function WeekdaySection({
 
   return (
     <div className=" relative mb-2 flex flex-col">
-      <h3 className=" text-lg font-medium hidden 2xs:inline absolute top-0 -translate-y-full">Weekday Summary</h3>
+      <h3 className="text-lg font-medium hidden 2xs:inline absolute top-0 -translate-y-full">Weekday Summary</h3>
       <div className="relative flex  justify-center">
         <div
           ref={scrollRef}
@@ -118,7 +118,7 @@ export default function WeekdaySection({
               onClick={() => scrollTo(-1)}
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
+              className="h-10 w-10 rounded-full bg-gray-600 border-gray-700 shadow-md flex gap-0"
             >
               <span className="translate-x-1 -translate-y-px">|</span>
               <ChevronLeft className="h-4 w-4 " />
@@ -131,7 +131,7 @@ export default function WeekdaySection({
               onClick={() => scrollTo(1)}
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-full bg-gray-800 border-gray-700 shadow-md flex gap-0"
+              className="h-10 w-10 rounded-full bg-gray-600 border-gray-700 shadow-md flex gap-0"
             >
               <ChevronRight className="h-4 w-4" />
               <span className="-translate-x-1 -translate-y-px">|</span>

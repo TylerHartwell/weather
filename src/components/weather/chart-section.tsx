@@ -34,50 +34,14 @@ export default function ChartSection({
 
   const handleHideToggle = (seriesKey: SeriesKey) => {
     setVisibleSeries(prev => {
-      const isCurrentlySolo = prev[seriesKey].solo
-
       const newState: VisibleSeries = {} as VisibleSeries
 
-      if (isCurrentlySolo) {
-        seriesKeys.forEach(key => {
-          newState[key] = {
-            hidden: key === seriesKey,
-            solo: false
-          }
-        })
-      } else {
-        seriesKeys.forEach(key => {
-          newState[key] = {
-            hidden: key === seriesKey ? !prev[key].hidden : prev[key].hidden,
-            solo: false
-          }
-        })
-      }
-      return newState
-    })
-  }
-
-  const handleSoloToggle = (seriesKey: SeriesKey) => {
-    setVisibleSeries(prev => {
-      const isCurrentlySolo = prev[seriesKey].solo
-
-      const newState: VisibleSeries = {} as VisibleSeries
-
-      if (isCurrentlySolo) {
-        seriesKeys.forEach(key => {
-          newState[key] = {
-            ...prev[key],
-            solo: false
-          }
-        })
-      } else {
-        seriesKeys.forEach(key => {
-          newState[key] = {
-            hidden: false,
-            solo: key === seriesKey
-          }
-        })
-      }
+      seriesKeys.forEach(key => {
+        newState[key] = {
+          ...prev[key],
+          hidden: key === seriesKey ? !prev[key].hidden : prev[key].hidden
+        }
+      })
 
       return newState
     })
@@ -85,13 +49,7 @@ export default function ChartSection({
 
   return (
     <div>
-      <ChartControls
-        visibleSeries={visibleSeries}
-        onHideToggle={handleHideToggle}
-        onSoloToggle={handleSoloToggle}
-        temperatureUnit={temperatureUnit}
-        windSpeedUnit={windSpeedUnit}
-      />
+      <ChartControls visibleSeries={visibleSeries} onHideToggle={handleHideToggle} temperatureUnit={temperatureUnit} windSpeedUnit={windSpeedUnit} />
       <WeatherChart
         weatherHourly={weatherHourly}
         scrollTargetTimestamp={scrollTargetTimestamp}

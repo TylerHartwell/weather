@@ -1,12 +1,11 @@
 import { SeriesKey, TemperatureUnit, VisibleSeries, WindSpeedUnit } from "@/types/weather"
 import { Button } from "../ui/button"
-import { EyeOff, Target } from "lucide-react"
+import { EyeOff } from "lucide-react"
 
 interface SeriesControlProps {
   seriesKey: SeriesKey
   visibleSeries: VisibleSeries
   onHideToggle: (seriesKey: SeriesKey) => void
-  onSoloToggle: (seriesKey: SeriesKey) => void
   temperatureUnit: TemperatureUnit
   windSpeedUnit: WindSpeedUnit
 }
@@ -35,32 +34,21 @@ const seriesConfig: Record<
   }
 }
 
-export default function SeriesControl({ seriesKey, visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle, onSoloToggle }: SeriesControlProps) {
+export default function SeriesControl({ seriesKey, visibleSeries, temperatureUnit, windSpeedUnit, onHideToggle }: SeriesControlProps) {
   const series = visibleSeries[seriesKey]
   const { label, labelUnits, bgColor, textColor } = seriesConfig[seriesKey]
   const unit = seriesKey === "temperature" ? temperatureUnit : seriesKey === "wind" ? windSpeedUnit : undefined
 
   return (
     <div className="flex items-center gap-0.5">
-      <div className="flex gap-0.5">
-        <Button
-          variant={!series.hidden ? "secondary" : "destructive"}
-          size="sm"
-          onClick={() => onHideToggle(seriesKey)}
-          className="h-8 w-8 text-xs opacity-90 cursor-pointer"
-        >
-          <EyeOff className="h-2 w-2" />
-        </Button>
-
-        <Button
-          variant={!series.solo ? "secondary" : "destructive"}
-          size="sm"
-          onClick={() => onSoloToggle(seriesKey)}
-          className="h-8 w-8 text-xs opacity-90 cursor-pointer"
-        >
-          <Target className="h-2 w-2" />
-        </Button>
-      </div>
+      <Button
+        variant={!series.hidden ? "secondary" : "destructive"}
+        size="sm"
+        onClick={() => onHideToggle(seriesKey)}
+        className="h-8 w-8 text-xs opacity-90 cursor-pointer"
+      >
+        <EyeOff className="h-2 w-2" />
+      </Button>
 
       <div className="flex items-center">
         <div className={`w-3 h-3 ${bgColor} rounded-full mr-1 hidden sm:inline-block`}></div>
