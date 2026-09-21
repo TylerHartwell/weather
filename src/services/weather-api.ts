@@ -103,7 +103,8 @@ export async function fetchWeatherData(
         "precipitation_probability_max",
         "weather_code",
         "sunrise",
-        "sunset"
+        "sunset",
+        "relative_humidity_2m_mean"
       ],
       "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation_probability", "relative_humidity_2m", "weather_code"],
       "minutely_15": ["temperature_2m", "relative_humidity_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "weather_code"],
@@ -178,7 +179,8 @@ export async function fetchWeatherData(
         ),
         sunset: [...Array(sunsets.valuesInt64Length())].map((_, i) =>
           DateTime.fromSeconds(Number(sunsets.valuesInt64(i))).setZone(timezone || "local")
-        )
+        ),
+        relativeHumidity2mMean: daily.variables(8)!.valuesArray()!
       },
       timezone,
       timezoneAbbreviation,

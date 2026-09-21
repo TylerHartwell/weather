@@ -37,7 +37,8 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
 
         weatherCode: weatherDaily.weatherCode[i],
         sunrise: weatherDaily.sunrise[i],
-        sunset: weatherDaily.sunset[i]
+        sunset: weatherDaily.sunset[i],
+        relativeHumidity2mMean: weatherDaily.relativeHumidity2mMean[i]
       })
     }
 
@@ -120,6 +121,7 @@ export default function WeekdayCards({ weatherDaily, onDayClick, selectedTimesta
               {Math.round(day.temperature2mMax)}° {Math.round(day.temperature2mMin)}°
             </div>
             <div className="text-sm text-blue-400">{Math.round(day.precipitationProbabilityMax)}%</div>
+            <div className="text-sm text-pink-400">~{Math.round(day.relativeHumidity2mMean)}%</div>
           </Card>
         )
       })}

@@ -48,7 +48,8 @@ export const createPlaceholderWeatherData = ({
       precipitationProbabilityMax: new Float32Array(dailyLength),
       weatherCode: new Float32Array(dailyLength),
       sunrise: Array.from({ length: dailyLength }, (_, i) => startOfDay.plus({ days: i, hours: 6 })),
-      sunset: Array.from({ length: dailyLength }, (_, i) => startOfDay.plus({ days: i, hours: 18 }))
+      sunset: Array.from({ length: dailyLength }, (_, i) => startOfDay.plus({ days: i, hours: 18 })),
+      relativeHumidity2mMean: new Float32Array(dailyLength)
     },
     timezone: null,
     timezoneAbbreviation: null,

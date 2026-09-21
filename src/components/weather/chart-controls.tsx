@@ -35,6 +35,13 @@ export default function ChartControls({ visibleSeries, temperatureUnit, windSpee
           windSpeedUnit={windSpeedUnit}
           onHideToggle={onHideToggle}
         />
+        <SeriesControl
+          seriesKey="humidity"
+          visibleSeries={visibleSeries}
+          temperatureUnit={temperatureUnit}
+          windSpeedUnit={windSpeedUnit}
+          onHideToggle={onHideToggle}
+        />
       </div>
     </div>
   )

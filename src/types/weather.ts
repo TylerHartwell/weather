@@ -60,13 +60,14 @@ export interface WeatherDaily {
   weatherCode: Float32Array
   sunrise: DateTime[]
   sunset: DateTime[]
+  relativeHumidity2mMean: Float32Array
 }
 
 export type WeatherDay = {
   [K in keyof WeatherDaily]: WeatherDaily[K] extends Array<infer U> ? U : WeatherDaily[K] extends Float32Array ? number : never
 }
 
-export const seriesKeys = ["temperature", "precipitation", "wind"] as const
+export const seriesKeys = ["temperature", "precipitation", "humidity", "wind"] as const
 export type SeriesKey = (typeof seriesKeys)[number]
 
 export type VisibleSeries = Record<SeriesKey, { hidden: boolean; solo: boolean }>

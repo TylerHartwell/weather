@@ -438,6 +438,41 @@ export default function WeatherChart({
 
       ctx.restore()
     }
+    const drawChartHumidity = () => {
+      ctx.save()
+
+      ctx.textAlign = "center"
+      ctx.textBaseline = "bottom"
+      ctx.strokeStyle = "#F472B6"
+      ctx.fillStyle = "#F472B6"
+      ctx.lineWidth = 2
+
+      ctx.beginPath()
+      allHours.forEach((point, index) => {
+        const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
+        const y = height - chartPaddingBottom - (point.relativeHumidity2m / 100) * chartHeight
+
+        if (index === 0) {
+          ctx.moveTo(x, y)
+        } else {
+          ctx.lineTo(x, y)
+        }
+      })
+      ctx.stroke()
+
+      allHours.forEach((point, index) => {
+        const x = chartPaddingX + (index / (allHours.length - 1)) * chartWidth
+        const y = height - chartPaddingBottom - (point.relativeHumidity2m / 100) * chartHeight
+
+        ctx.beginPath()
+        ctx.arc(x, y, 3, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.fillText(`${point.relativeHumidity2m.toFixed(0)}`, x, y - 5)
+      })
+
+      ctx.restore()
+    }
     const drawChartWind = () => {
       ctx.save()
 
@@ -583,6 +618,9 @@ export default function WeatherChart({
 
     if (getVisibilityState("precipitation")) {
       drawChartPrecipitation()
+    }
+    if (getVisibilityState("humidity")) {
+      drawChartHumidity()
     }
     if (getVisibilityState("wind")) {
       drawChartWind()

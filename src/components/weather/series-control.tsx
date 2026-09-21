@@ -26,6 +26,12 @@ const seriesConfig: Record<
     bgColor: "bg-blue-400",
     textColor: "text-blue-400"
   },
+  humidity: {
+    label: "Humidity",
+    labelUnits: () => "(%)",
+    bgColor: "bg-pink-400",
+    textColor: "text-pink-400"
+  },
   wind: {
     label: "Wind",
     labelUnits: unit => `(${unit === "mph" ? "mph" : "kmh"})`,
