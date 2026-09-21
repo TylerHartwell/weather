@@ -74,6 +74,7 @@ export default function SearchBar({ onSearch, onUseCurrentLocation, isLoading, i
         <Input
           id="search-location"
           type="text"
+          autoComplete="off"
           placeholder="Enter city or postal code..."
           value={searchQuery}
           onFocus={e => e.target.select()}
@@ -90,6 +91,10 @@ export default function SearchBar({ onSearch, onUseCurrentLocation, isLoading, i
             if (e.key === "ArrowUp" && suggestions.length) {
               e.preventDefault()
               setActiveSuggestionIndex(index => (index - 1 + suggestions.length) % suggestions.length)
+            }
+            if (e.key === "Tab" && suggestions.length) {
+              e.preventDefault()
+              selectSuggestion(suggestions[activeSuggestionIndex >= 0 ? activeSuggestionIndex : 0])
             }
             if (e.key === "Escape") setSuggestions([])
           }}

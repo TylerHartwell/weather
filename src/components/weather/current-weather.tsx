@@ -38,11 +38,11 @@ export default function CurrentWeather({
 }: CurrentWeatherProps) {
   return (
     <div className="mb-0 flex-1 flex flex-col ">
-      <div className="flex items-center justify-between text-sm font-medium">
-        Current Weather
-        <div className="flex items-center justify-end">
-          <span className="text-sm text-gray-400 font-normal text-nowrap mr-1">Location:</span>
-          <CardTitle className="text-base font-medium">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <span className="shrink-0 hidden 3xs:inline">Current Weather</span>
+        <div className="flex min-w-0 flex-1 items-center justify-end">
+          <span className="mr-1 text-nowrap font-normal text-gray-400">Location:</span>
+          <CardTitle className="min-w-0 truncate text-right text-base font-medium">
             <span>{locationName}</span>
             {countryCode ? (
               <span>, {countryCode === "US" ? admin1 : countryCode}</span>
